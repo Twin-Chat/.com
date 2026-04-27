@@ -1,0 +1,2946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Twin Chat</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+input,textarea,select{-webkit-user-select:text;user-select:text;touch-action:manipulation}
+body{font-family:'Poppins',sans-serif;background:#f0f4ff;min-height:100vh;overflow-x:hidden}
+:root{
+  --primary:#7C4DFF;--primary-light:#9c6fff;--primary-dark:#5e35b1;
+  --pink:#ff6b9d;--blue:#4fc3f7;
+  --bg:#f8f9ff;--white:#ffffff;--surface:#f0f4ff;
+  --text:#1a1a2e;--text2:#6b7280;--text3:#9ca3af;
+  --border:#e8eaf6;--shadow:0 8px 32px rgba(124,77,255,0.12);
+}
+.app{max-width:430px;margin:0 auto;background:var(--white);min-height:100vh;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(124,77,255,0.15)}
+
+/* AUTH */
+.auth-bg{min-height:100vh;background:linear-gradient(145deg,#f8f9ff 0%,#ede7ff 50%,#fce4ec 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.auth-card{background:var(--white);border-radius:28px;padding:36px 28px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(124,77,255,0.15)}
+.auth-logo{text-align:center;margin-bottom:28px}
+.auth-logo-icon{width:72px;height:72px;background:linear-gradient(135deg,var(--primary),var(--pink));border-radius:22px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:32px;box-shadow:0 8px 24px rgba(124,77,255,0.35)}
+.auth-logo h1{font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.auth-logo p{color:var(--text2);font-size:13px;margin-top:4px}
+.input-group{margin-bottom:14px}
+.input-label{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;display:block}
+.inp{width:100%;border:2px solid var(--border);border-radius:14px;padding:13px 16px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--text);background:var(--bg);outline:none;transition:all .2s;-webkit-user-select:text;user-select:text;pointer-events:auto;touch-action:manipulation}
+.inp:focus{border-color:var(--primary);background:var(--white);box-shadow:0 0 0 4px rgba(124,77,255,0.08)}
+.btn-primary{width:100%;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;border-radius:14px;padding:14px;font-family:'Poppins',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;box-shadow:0 6px 20px rgba(124,77,255,0.35)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(124,77,255,0.45)}
+.btn-primary:active{transform:translateY(0)}
+.btn-outline{width:100%;background:transparent;color:var(--primary);border:2px solid var(--primary);border-radius:14px;padding:13px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:10px}
+.btn-outline:hover{background:rgba(124,77,255,0.06)}
+.auth-switch{text-align:center;margin-top:18px;font-size:13px;color:var(--text2)}
+.auth-switch span{color:var(--primary);font-weight:600;cursor:pointer}
+.err{color:#e53935;font-size:12px;margin-top:6px}
+
+/* TOP BAR */
+.topbar{background:var(--white);padding:14px 18px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
+.topbar-logo{display:flex;align-items:center;gap:8px}
+.topbar-logo svg{filter:drop-shadow(0 2px 6px rgba(124,77,255,0.35))}
+.topbar-logo-text{font-size:19px;font-weight:800;background:linear-gradient(135deg,var(--primary),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.3px}
+.topbar-icons{display:flex;gap:10px;align-items:center}
+.icon-btn{width:38px;height:38px;border-radius:12px;background:var(--surface);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:17px;position:relative;transition:all .2s}
+.icon-btn:hover{background:var(--border)}
+.notif-badge{position:absolute;top:-3px;right:-3px;width:17px;height:17px;background:var(--pink);border-radius:50%;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+
+/* SEARCH BAR */
+.search-bar-wrap{padding:10px 16px;background:var(--white);border-bottom:1px solid var(--border)}
+.search-bar{display:flex;align-items:center;background:var(--surface);border-radius:14px;padding:10px 14px;gap:10px;border:2px solid transparent;transition:all .2s}
+.search-bar:focus-within{border-color:var(--primary);background:var(--white)}
+.search-bar input{flex:1;border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:14px;color:var(--text);outline:none}
+.search-bar input::placeholder{color:var(--text3)}
+
+/* STORIES */
+.stories{padding:14px 0 10px;overflow-x:auto;display:flex;gap:12px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.stories::-webkit-scrollbar{display:none}
+.story-item{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;flex-shrink:0}
+.story-ring{width:58px;height:58px;border-radius:50%;padding:2.5px;background:linear-gradient(135deg,var(--primary),var(--pink));position:relative}
+.story-ring.you{background:var(--surface);border:2px solid var(--border)}
+.story-avatar{width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid var(--white);background:#ddd;display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden}
+.story-name{font-size:10px;color:var(--text2);font-weight:500;max-width:60px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.story-add{position:absolute;bottom:0;right:0;width:20px;height:20px;background:var(--primary);border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700}
+
+/* FEED */
+.feed{padding:0}
+.post-card{background:var(--white);margin-bottom:8px;border-bottom:8px solid var(--surface)}
+.post-head{display:flex;align-items:center;padding:14px 16px 10px;gap:10px}
+.post-avatar{width:42px;height:42px;border-radius:50%;overflow:hidden;flex-shrink:0;background:linear-gradient(135deg,var(--primary),var(--pink));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:17px}
+.post-avatar img{width:100%;height:100%;object-fit:cover}
+.post-info{flex:1}
+.post-author{font-size:14px;font-weight:700;color:var(--text)}
+.post-loc{font-size:11px;color:var(--text3);margin-top:1px}
+.post-menu-btn{color:var(--text3);font-size:20px;cursor:pointer;padding:4px}
+.post-text{padding:0 16px 10px;font-size:13px;color:var(--text2);line-height:1.6}
+.post-img{width:100%;aspect-ratio:4/3;object-fit:cover;background:linear-gradient(135deg,#e8eaf6,#fce4ec)}
+.post-img-placeholder{width:100%;height:200px;background:linear-gradient(135deg,#ede7ff,#fce4ec);display:flex;align-items:center;justify-content:center;font-size:48px}
+.post-actions{display:flex;align-items:center;padding:10px 16px;gap:18px}
+.action-btn{display:flex;align-items:center;gap:5px;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.action-btn:hover{color:var(--primary)}
+.action-btn.liked{color:var(--pink)}
+.action-btn svg{width:18px;height:18px}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);display:flex;padding:8px 0 14px;z-index:100;box-shadow:0 -4px 20px rgba(0,0,0,0.06)}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0}
+.nav-tab svg{width:22px;height:22px;transition:all .2s}
+.nav-tab span{font-size:10px;font-weight:500;color:var(--text3);transition:all .2s}
+.nav-tab.active svg{color:var(--primary)}
+.nav-tab.active span{color:var(--primary)}
+.nav-tab:not(.active) svg{color:var(--text3)}
+.nav-center{flex:1;display:flex;align-items:center;justify-content:center}
+.nav-center-btn{width:46px;height:46px;background:linear-gradient(135deg,var(--primary),var(--pink));border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(124,77,255,0.4);margin-top:-18px}
+
+/* PROFILE PAGE */
+.profile-cover{width:100%;height:180px;object-fit:cover;background:linear-gradient(135deg,var(--primary),var(--pink))}
+.profile-cover-placeholder{width:100%;height:180px;background:linear-gradient(135deg,#ede7ff,#fce4ec);display:flex;align-items:center;justify-content:center;font-size:52px}
+.profile-avatar-wrap{position:relative;margin:-42px auto 0;width:84px}
+.profile-main-avatar{width:84px;height:84px;border-radius:50%;border:4px solid #fff;background:linear-gradient(135deg,var(--primary),var(--pink));display:flex;align-items:center;justify-content:center;color:#fff;font-size:32px;font-weight:700;overflow:hidden;box-shadow:0 4px 20px rgba(124,77,255,0.3)}
+.profile-main-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-edit-btn{position:absolute;bottom:2px;right:2px;width:26px;height:26px;background:var(--primary);border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px}
+.profile-info{text-align:center;padding:10px 20px 0}
+.profile-name{font-size:20px;font-weight:800;color:var(--text)}
+.profile-bio{font-size:13px;color:var(--text2);margin-top:4px;line-height:1.5}
+.profile-stats{display:flex;justify-content:center;gap:32px;padding:16px 0}
+.profile-stat{text-align:center}
+.profile-stat-val{font-size:18px;font-weight:800;color:var(--text)}
+.profile-stat-lbl{font-size:11px;color:var(--text3);font-weight:500}
+.profile-btns{display:flex;gap:10px;padding:0 16px 16px}
+.btn-follow{flex:1;background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;border-radius:14px;padding:12px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+.btn-msg{flex:1;background:var(--surface);color:var(--primary);border:2px solid var(--border);border-radius:14px;padding:12px;font-family:'Poppins',sans-serif;font-size:14px;font-weight:700;cursor:pointer}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.photo-cell{aspect-ratio:1;background:linear-gradient(135deg,#ede7ff,#fce4ec);overflow:hidden}
+.photo-cell img{width:100%;height:100%;object-fit:cover}
+
+/* MESSAGES PAGE */
+.msg-list-item{display:flex;align-items:center;padding:12px 16px;gap:12px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border)}
+.msg-list-item:hover{background:var(--surface)}
+.msg-list-avatar{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--pink));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:20px;flex-shrink:0;overflow:hidden;position:relative}
+.msg-list-avatar img{width:100%;height:100%;object-fit:cover}
+.online-dot{position:absolute;bottom:2px;right:2px;width:12px;height:12px;background:#4caf50;border-radius:50%;border:2px solid #fff}
+.msg-list-info{flex:1;min-width:0}
+.msg-list-name{font-size:15px;font-weight:700;color:var(--text)}
+.msg-list-preview{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.msg-list-time{font-size:11px;color:var(--text3);flex-shrink:0}
+.unread-badge{background:var(--primary);color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* CHAT WINDOW - WhatsApp Style */
+.chat-screen{display:flex;flex-direction:column;height:100vh;background:#ECE5DD;position:relative;overflow:hidden}
+
+/* WA style wallpaper bg */
+.chat-screen::before{content:'';position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c8b8a2' fill-opacity='0.18'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");z-index:0;pointer-events:none}
+
+/* HEADER */
+.chat-header{background:linear-gradient(135deg,#7C4DFF,#6a3de8);padding:10px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;box-shadow:0 2px 12px rgba(124,77,255,0.35)}
+.chat-back{cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:background .2s;flex-shrink:0}
+.chat-back:hover{background:rgba(255,255,255,0.15)}
+.chat-header-avatar-wrap{position:relative;cursor:pointer}
+.chat-header-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#ff6b9d,#ff9abe);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;overflow:hidden;border:2px solid rgba(255,255,255,0.3)}
+.chat-header-avatar img{width:100%;height:100%;object-fit:cover}
+.chat-online-ring{position:absolute;bottom:1px;right:1px;width:11px;height:11px;background:#4caf50;border-radius:50%;border:2px solid #7C4DFF}
+.chat-header-info{flex:1;min-width:0}
+.chat-header-name{font-size:15px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chat-header-status{font-size:11px;color:rgba(255,255,255,0.8);font-weight:500;margin-top:1px}
+.chat-header-actions{display:flex;gap:4px}
+.chat-action-btn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.chat-action-btn:hover{background:rgba(255,255,255,0.25)}
+.chat-action-btn svg{width:18px;height:18px;stroke:#fff}
+
+/* DATE SEPARATOR */
+.date-sep{display:flex;align-items:center;justify-content:center;margin:8px 0}
+.date-sep-pill{background:rgba(225,245,254,0.92);color:#546e7a;font-size:11px;font-weight:600;padding:4px 14px;border-radius:20px;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+
+/* BODY SCROLL */
+.chat-body{flex:1;overflow-y:auto;padding:10px 12px 80px;display:flex;flex-direction:column;gap:3px;position:relative;z-index:1;scroll-behavior:smooth}
+.chat-body::-webkit-scrollbar{width:4px}
+.chat-body::-webkit-scrollbar-thumb{background:rgba(124,77,255,0.2);border-radius:4px}
+
+/* MESSAGE GROUPS */
+.msg-group{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
+.msg-group.mine{align-items:flex-end}
+.msg-group.theirs{align-items:flex-start}
+
+/* BUBBLE ROW */
+.msg-row{display:flex;align-items:flex-end;gap:6px}
+.msg-row.mine{flex-direction:row-reverse}
+
+/* AVATAR in chat */
+.chat-bubble-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7C4DFF,#ff6b9d);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;overflow:hidden;align-self:flex-end;box-shadow:0 1px 4px rgba(0,0,0,0.15)}
+.chat-bubble-avatar img{width:100%;height:100%;object-fit:cover}
+.chat-bubble-avatar.hidden{visibility:hidden}
+
+/* BUBBLE */
+.msg-bubble{max-width:72%;padding:7px 12px 4px;font-size:13.5px;line-height:1.55;position:relative;word-break:break-word;box-shadow:0 1px 3px rgba(0,0,0,0.12)}
+.msg-bubble.theirs{background:#fff;color:#1a1a2e;border-radius:0 16px 16px 16px;border-top-left-radius:2px}
+.msg-bubble.mine{background:linear-gradient(135deg,#7C4DFF,#9c6fff);color:#fff;border-radius:16px 2px 16px 16px;border-top-right-radius:2px}
+
+/* Bubble tail */
+.msg-bubble.theirs::before{content:'';position:absolute;left:-7px;top:0;border-width:0 8px 8px 0;border-style:solid;border-color:transparent #fff transparent transparent}
+.msg-bubble.mine::after{content:'';position:absolute;right:-7px;top:0;border-width:0 0 8px 8px;border-style:solid;border-color:transparent transparent transparent #7C4DFF}
+
+/* First in group hides tail */
+.msg-bubble.theirs.no-tail::before{display:none;border-radius:16px}
+.msg-bubble.mine.no-tail::after{display:none;border-radius:16px}
+
+/* TIME + TICK */
+.msg-meta{display:flex;align-items:center;justify-content:flex-end;gap:3px;margin-top:3px;opacity:.75}
+.msg-meta-time{font-size:10px}
+.msg-meta.theirs .msg-meta-time{color:#78909c}
+.msg-meta.mine .msg-meta-time{color:rgba(255,255,255,0.8)}
+.msg-tick{display:flex;align-items:center}
+.msg-tick svg{width:14px;height:14px}
+
+/* IMAGE bubble */
+.bubble-img{max-width:220px;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.15);cursor:pointer}
+.bubble-img img{width:100%;display:block;border-radius:12px}
+
+/* EMOJI only message */
+.msg-bubble.emoji-only{background:transparent !important;box-shadow:none !important;font-size:36px;padding:4px 0}
+.msg-bubble.emoji-only::before,.msg-bubble.emoji-only::after{display:none}
+
+/* TYPING INDICATOR */
+.typing-indicator{display:flex;align-items:center;gap:6px;padding:8px 12px;background:#fff;border-radius:0 16px 16px 16px;width:fit-content;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+.typing-dot{width:8px;height:8px;background:#9ca3af;border-radius:50%;animation:typingBounce 1.2s infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+
+/* INPUT BAR */
+.chat-input-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#f0f4ff;padding:8px 10px 18px;z-index:10;border-top:1px solid rgba(124,77,255,0.08)}
+.chat-input-row{display:flex;align-items:flex-end;gap:8px}
+.chat-inp-wrap{flex:1;background:#fff;border-radius:24px;display:flex;align-items:flex-end;padding:6px 14px;gap:8px;box-shadow:0 1px 6px rgba(0,0,0,0.08);border:1.5px solid rgba(124,77,255,0.1);transition:border .2s;min-height:44px}
+.chat-inp-wrap:focus-within{border-color:rgba(124,77,255,0.35)}
+.chat-emoji-btn{font-size:20px;cursor:pointer;flex-shrink:0;line-height:1;padding:2px 0}
+.chat-inp{flex:1;border:none;background:transparent;font-family:'Poppins',sans-serif;font-size:14px;color:#1a1a2e;outline:none;resize:none;max-height:100px;line-height:1.5;padding:4px 0;min-height:24px}
+.chat-inp::placeholder{color:#9ca3af}
+.chat-attach-btn{font-size:19px;cursor:pointer;flex-shrink:0;padding:2px 0;opacity:.7;transition:opacity .2s}
+.chat-attach-btn:hover{opacity:1}
+.chat-send-btn{width:44px;height:44px;background:linear-gradient(135deg,#7C4DFF,#9c6fff);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 14px rgba(124,77,255,0.45);flex-shrink:0;transition:all .2s}
+.chat-send-btn:hover{transform:scale(1.06);box-shadow:0 6px 18px rgba(124,77,255,0.5)}
+.chat-send-btn:active{transform:scale(0.95)}
+.chat-mic-btn{width:44px;height:44px;background:linear-gradient(135deg,#7C4DFF,#9c6fff);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(124,77,255,0.45);flex-shrink:0}
+
+/* EMOJI PICKER */
+.emoji-picker{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#fff;border-radius:20px 20px 0 0;padding:14px 12px 10px;box-shadow:0 -4px 24px rgba(0,0,0,0.12);z-index:20;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-height:200px;overflow-y:auto}
+.emoji-item{font-size:26px;cursor:pointer;padding:4px;border-radius:8px;transition:background .15s;line-height:1}
+.emoji-item:hover{background:#f0f4ff}
+
+/* NEW MSG BUBBLE animation */
+@keyframes bubblePop{from{transform:scale(0.85);opacity:0}to{transform:scale(1);opacity:1}}
+.msg-row{animation:bubblePop .18s ease}
+
+/* SEARCH PAGE */
+.search-result-item{display:flex;align-items:center;padding:12px 16px;gap:12px;border-bottom:1px solid var(--border);cursor:pointer}
+.search-result-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--pink));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;overflow:hidden;flex-shrink:0}
+.search-result-avatar img{width:100%;height:100%;object-fit:cover}
+.search-result-info{flex:1}
+.search-result-name{font-size:14px;font-weight:700;color:var(--text)}
+.search-result-meta{font-size:12px;color:var(--text3)}
+.btn-add{background:linear-gradient(135deg,var(--primary),var(--primary-light));color:#fff;border:none;border-radius:10px;padding:7px 16px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-added{background:var(--surface);color:var(--text2);border:1.5px solid var(--border);border-radius:10px;padding:7px 14px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:default;white-space:nowrap}
+
+/* FRIENDS PAGE */
+.friends-tabs{display:flex;padding:0 16px;gap:0;border-bottom:1px solid var(--border);background:var(--white)}
+.friends-tab{flex:1;padding:13px 0;text-align:center;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.friends-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.friend-item{display:flex;align-items:center;padding:12px 16px;gap:12px;border-bottom:1px solid var(--border)}
+.friend-avatar{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--pink));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:19px;overflow:hidden;flex-shrink:0}
+.friend-avatar img{width:100%;height:100%;object-fit:cover}
+.friend-info{flex:1}
+.friend-name{font-size:14px;font-weight:700;color:var(--text)}
+.friend-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.btn-accept{background:linear-gradient(135deg,#4caf50,#43a047);color:#fff;border:none;border-radius:10px;padding:7px 14px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer}
+.btn-decline{background:var(--surface);color:#e53935;border:1.5px solid #ffcdd2;border-radius:10px;padding:7px 14px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:700;cursor:pointer;margin-left:6px}
+.btn-chat-small{background:var(--surface);color:var(--primary);border:1.5px solid var(--border);border-radius:10px;padding:7px 14px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:600;cursor:pointer}
+
+/* NOTIFICATIONS */
+.notif-item{display:flex;align-items:center;padding:12px 16px;gap:12px;border-bottom:1px solid var(--border);background:var(--white)}
+.notif-item.unread{background:#f3f0ff}
+.notif-icon-wrap{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--pink));display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.notif-text{flex:1;font-size:13px;color:var(--text);line-height:1.4}
+.notif-text strong{font-weight:700}
+.notif-time{font-size:11px;color:var(--text3);flex-shrink:0}
+.unread-dot{width:8px;height:8px;background:var(--primary);border-radius:50%;flex-shrink:0}
+
+/* NOTIFICATION DROPDOWN */
+.notif-dropdown{position:fixed;top:58px;right:8px;width:min(320px,96vw);max-height:450px;background:#fff;border-radius:20px;box-shadow:0 8px 40px rgba(0,0,0,0.18);z-index:300;overflow:hidden;display:flex;flex-direction:column}
+.notif-dropdown-head{padding:13px 16px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f0f4ff;flex-shrink:0}
+.notif-dropdown-body{overflow-y:auto;flex:1}
+.notif-row{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-bottom:1px solid #f8f9ff}
+.notif-row.unread{background:#f3f0ff}
+.notif-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#7C4DFF,#ff6b9d);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px}
+.notif-content{flex:1;min-width:0}
+.notif-content-name{font-size:13px;font-weight:700;color:#1a1a2e}
+.notif-content-text{font-size:12px;color:#6b7280;margin-top:2px;line-height:1.4}
+.notif-content-actions{display:flex;gap:6px;margin-top:8px}
+.notif-btn-accept{flex:1;background:linear-gradient(135deg,#7C4DFF,#9c6fff);color:#fff;border:none;border-radius:8px;padding:7px 0;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer}
+.notif-btn-decline{flex:1;background:#f0f4ff;color:#6b7280;border:1.5px solid #e8eaf6;border-radius:8px;padding:7px 0;font-family:'Poppins',sans-serif;font-size:11px;font-weight:700;cursor:pointer}
+
+/* 3-DOT MENU */
+.dots-menu{position:fixed;top:58px;right:8px;background:#fff;border-radius:18px;box-shadow:0 8px 40px rgba(0,0,0,0.18);z-index:300;overflow:hidden;min-width:210px}
+.dots-menu-item{display:flex;align-items:center;gap:13px;padding:14px 18px;cursor:pointer;font-size:13px;font-weight:600;color:#1a1a2e;transition:background .15s;border-bottom:1px solid #f8f9ff}
+.dots-menu-item:last-child{border-bottom:none}
+.dots-menu-item:active{background:#f0f4ff}
+.dots-menu-item.danger{color:#e53935}
+.dots-menu-divider{height:5px;background:#f8f9ff}
+
+/* EDIT PROFILE */
+.edit-section{padding:20px 16px}
+.edit-section h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:14px}
+.avatar-edit-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:24px}
+.avatar-edit-circle{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--pink));display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;font-weight:700;margin-bottom:10px;overflow:hidden;position:relative;cursor:pointer}
+.avatar-edit-circle img{width:100%;height:100%;object-fit:cover}
+.avatar-overlay{position:absolute;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;border-radius:50%;opacity:0;transition:.2s}
+.avatar-edit-circle:hover .avatar-overlay{opacity:1}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.modal-sheet{background:var(--white);border-radius:24px 24px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:16px;text-align:center}
+.modal-close{position:absolute;top:16px;right:20px;font-size:20px;cursor:pointer;color:var(--text3)}
+
+/* TOASTER */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;animation:fadeInOut 2.5s forwards}
+@keyframes fadeInOut{0%{opacity:0;top:10px}15%{opacity:1;top:20px}80%{opacity:1;top:20px}100%{opacity:0;top:10px}}
+
+.section-title{padding:14px 16px 6px;font-size:14px;font-weight:700;color:var(--text);background:var(--white)}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty-state .emoji{font-size:48px;margin-bottom:10px}
+.empty-state p{font-size:14px}
+.page-content{padding-bottom:80px}
+.divider{height:8px;background:var(--surface)}
+
+/* STORY VIEWER */
+.story-viewer{position:fixed;inset:0;background:#000;z-index:500;display:flex;flex-direction:column}
+.story-progress-bar{display:flex;gap:3px;padding:10px 12px 6px}
+.story-seg{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,0.35);overflow:hidden}
+.story-seg-fill{height:100%;background:#fff;border-radius:2px;transition:width linear}
+.story-viewer-head{display:flex;align-items:center;padding:6px 12px 10px;gap:10px}
+.story-viewer-body{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.story-viewer-img{max-width:100%;max-height:100%;object-fit:contain}
+.story-viewer-text{position:absolute;bottom:0;left:0;right:0;padding:28px 20px 20px;background:linear-gradient(transparent,rgba(0,0,0,0.7));color:#fff;font-size:16px;font-weight:600;line-height:1.5;text-align:center}
+.story-viewer-tap-left{position:absolute;left:0;top:0;width:40%;height:100%;z-index:2}
+.story-viewer-tap-right{position:absolute;right:0;top:0;width:60%;height:100%;z-index:2}
+
+/* STORY CREATOR */
+.story-creator{position:fixed;inset:0;background:#111;z-index:500;display:flex;flex-direction:column}
+.story-creator-canvas{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.story-text-overlay{position:absolute;bottom:80px;left:0;right:0;padding:0 20px;text-align:center}
+.story-text-input{background:rgba(0,0,0,0.5);color:#fff;border:2px solid rgba(255,255,255,0.4);border-radius:16px;padding:12px 16px;font-family:'Poppins',sans-serif;font-size:16px;font-weight:600;width:100%;text-align:center;outline:none}
+.story-creator-toolbar{background:rgba(0,0,0,0.8);padding:10px 16px 24px;display:flex;gap:10px;align-items:center}
+
+/* CHAT IMAGE PREVIEW */
+.img-preview-strip{display:flex;gap:6px;padding:6px 10px;overflow-x:auto;background:#e8e0f5;border-radius:12px 12px 0 0;scrollbar-width:none}
+.img-preview-item{position:relative;flex-shrink:0}
+.img-preview-item img{width:60px;height:60px;object-fit:cover;border-radius:10px;border:2px solid #7C4DFF}
+.img-preview-rm{position:absolute;top:-5px;right:-5px;width:18px;height:18px;background:#e53935;border-radius:50%;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700}
+
+/* POST MULTI IMAGE */
+.post-img-grid{display:grid;gap:2px}
+.post-img-grid.n1{grid-template-columns:1fr}
+.post-img-grid.n2{grid-template-columns:1fr 1fr}
+.post-img-grid.n3{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
+.post-img-grid.n4plus{grid-template-columns:1fr 1fr;grid-template-rows:auto auto}
+.post-img-cell{overflow:hidden;background:#e8eaf6}
+.post-img-cell img{width:100%;height:100%;object-fit:cover;display:block}
+.post-img-cell.tall{aspect-ratio:1/1}
+.post-img-cell.span2{grid-column:span 2;aspect-ratio:16/9}
+.post-img-more{position:relative;display:flex;align-items:center;justify-content:center;background:#1a1a2e;color:#fff;font-size:22px;font-weight:800;aspect-ratio:1/1}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+firebase.initializeApp({
+  apiKey: "AIzaSyDaluF9mAgvEMyx2rXi2QCN_C3I3pobdtk",
+  authDomain: "chat-3306f.firebaseapp.com",
+  projectId: "chat-3306f",
+  storageBucket: "chat-3306f.firebasestorage.app",
+  messagingSenderId: "658014856225",
+  appId: "1:658014856225:web:e2175b3c8d33cc6bd7ef60"
+});
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const timeAgo = ts => {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const s = Math.floor((Date.now() - d) / 1000);
+  if (s < 60) return 'just now';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+};
+const fmtTime = ts => {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+};
+
+// ===== ICONS =====
+const Icon = ({ name, size = 22, color = 'currentColor' }) => {
+  const icons = {
+    home: <path d="M3 12L12 3l9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/>,
+    search: <><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></>,
+    msg: <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>,
+    bell: <><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></>,
+    user: <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+    plus: <><path d="M12 5v14M5 12h14"/></>,
+    heart: <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>,
+    comment: <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>,
+    share: <><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></>,
+    send: <><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></>,
+    back: <><polyline points="15 18 9 12 15 6"/></>,
+    edit: <><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
+    camera: <><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></>,
+    image: <><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></>,
+    mic: <><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></>,
+    phone: <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.8 10a19.79 19.79 0 01-3.07-8.67A2 2 0 012.7 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l1.06-1.06a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.07z"/>,
+    video: <><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></>,
+    file: <><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></>,
+    friends: <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></>,
+    check: <polyline points="20 6 9 17 4 12"/>,
+    x: <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+    logout: <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></>,
+  };
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      {icons[name]}
+    </svg>
+  );
+};
+
+// ===== TOAST =====
+let toastTimer;
+function Toast({ msg }) {
+  if (!msg) return null;
+  return <div className="toast">{msg}</div>;
+}
+
+// ===== AVATAR =====
+function Avatar({ user, size = 42, className = '', style = {} }) {
+  const bg = ['#7C4DFF','#ff6b9d','#4fc3f7','#ff9800','#4caf50'];
+  const color = bg[(user?.name || 'U').charCodeAt(0) % bg.length];
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: user?.photoURL ? 'none' : `linear-gradient(135deg, ${color}, ${color}99)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: size * 0.38, overflow: 'hidden', flexShrink: 0, ...style }}>
+      {user?.photoURL ? <img src={user.photoURL} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (user?.name || 'U')[0]?.toUpperCase()}
+    </div>
+  );
+}
+
+// ===== AUTH SCREEN =====
+function AuthScreen({ onAuth }) {
+  const [mode, setMode] = useState('login');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [pass, setPass] = useState('');
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    setLoading(true); setErr('');
+    try {
+      if (mode === 'register') {
+        const cred = await auth.createUserWithEmailAndPassword(email, pass);
+        await db.collection('users').doc(cred.user.uid).set({
+          uid: cred.user.uid, name, email, bio: '', photoURL: '',
+          friends: [], friendRequests: [], sentRequests: [],
+          blocked: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        onAuth(cred.user);
+      } else {
+        const cred = await auth.signInWithEmailAndPassword(email, pass);
+        onAuth(cred.user);
+      }
+    } catch (e) { setErr(e.message); }
+    setLoading(false);
+  };
+
+  return (
+    <div className="auth-bg">
+      <div className="auth-card">
+        <div className="auth-logo">
+          <div style={{ display:'flex', justifyContent:'center', marginBottom:14 }}>
+            <TwinLogo size={72} showText={false} />
+          </div>
+          <h1>Twin Chat</h1>
+          <p>Connect with friends</p>
+        </div>
+        {mode === 'register' && (
+          <div className="input-group">
+            <label className="input-label">Your Name</label>
+            <input className="inp" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} />
+          </div>
+        )}
+        <div className="input-group">
+          <label className="input-label">Email</label>
+          <input className="inp" type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} />
+        </div>
+        <div className="input-group">
+          <label className="input-label">Password</label>
+          <input className="inp" type="password" placeholder="••••••••" value={pass} onChange={e => setPass(e.target.value)} onKeyDown={e => e.key === 'Enter' && submit()} />
+        </div>
+        {err && <p className="err">{err}</p>}
+        <button className="btn-primary" onClick={submit} disabled={loading}>
+          {loading ? 'Please wait...' : mode === 'login' ? '🚀 Sign In' : '✨ Create Account'}
+        </button>
+        <div className="auth-switch">
+          {mode === 'login' ? <>Don't have an account? <span onClick={() => setMode('register')}>Sign up</span></> : <>Already have an account? <span onClick={() => setMode('login')}>Sign in</span></>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== TWIN CHAT LOGO =====
+function TwinLogo({ size = 32, showText = true, textSize = 19 }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap: showText ? 8 : 0 }}>
+      <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter:'drop-shadow(0 2px 8px rgba(124,77,255,0.4))', flexShrink:0 }}>
+        <defs>
+          <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#7C4DFF"/>
+            <stop offset="100%" stopColor="#ff6b9d"/>
+          </linearGradient>
+          <linearGradient id="lg2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#ff6b9d"/>
+            <stop offset="100%" stopColor="#7C4DFF"/>
+          </linearGradient>
+        </defs>
+        {/* Left bubble */}
+        <rect x="2" y="5" width="28" height="20" rx="8" fill="url(#lg1)"/>
+        <circle cx="9" cy="15" r="2.2" fill="white" opacity="0.95"/>
+        <circle cx="16" cy="15" r="2.2" fill="white" opacity="0.95"/>
+        <circle cx="23" cy="15" r="2.2" fill="white" opacity="0.95"/>
+        <path d="M7 25 L3 33 L15 28" fill="url(#lg1)"/>
+        {/* Right bubble — offset, overlapping */}
+        <rect x="18" y="19" width="28" height="20" rx="8" fill="url(#lg2)"/>
+        <circle cx="26" cy="29" r="2.2" fill="white" opacity="0.95"/>
+        <circle cx="32" cy="29" r="2.2" fill="white" opacity="0.95"/>
+        <circle cx="38" cy="29" r="2.2" fill="white" opacity="0.95"/>
+        <path d="M41 39 L46 46 L33 42" fill="url(#lg2)"/>
+      </svg>
+      {showText && (
+        <span style={{ fontSize:textSize, fontWeight:800, background:'linear-gradient(135deg,#7C4DFF,#ff6b9d)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', letterSpacing:'-0.3px', fontFamily:"'Poppins',sans-serif" }}>
+          Twin Chat
+        </span>
+      )}
+    </div>
+  );
+}
+
+// ===== MAIN APP =====
+function App() {
+  const [authUser, setAuthUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
+  const [tab, setTab] = useState('home');
+  const [toast, setToast] = useState('');
+  const [chatWith, setChatWith] = useState(null);
+  const [viewProfile, setViewProfile] = useState(null);
+  const [notifCount, setNotifCount] = useState(0);
+  const [lang, setLangCode] = useState(() => localStorage.getItem('tc_lang') || 'en');
+
+  const setLang = (code) => {
+    setLangCode(code);
+    localStorage.setItem('tc_lang', code);
+    // RTL for Arabic
+    document.documentElement.dir = code === 'ar' ? 'rtl' : 'ltr';
+  };
+
+  const t = LANGS[lang] || LANGS.en;
+
+  // Apply RTL on mount
+  React.useEffect(() => {
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+  }, []);
+
+  const showToast = msg => {
+    setToast(msg);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => setToast(''), 2600);
+  };
+
+  useEffect(() => {
+    const unsub = auth.onAuthStateChanged(u => {
+      setAuthUser(u);
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    if (!authUser) return;
+    const unsub = db.collection('users').doc(authUser.uid).onSnapshot(snap => {
+      if (snap.exists) {
+        const d = snap.data();
+        setUserData(d);
+        setNotifCount((d.friendRequests || []).length);
+      }
+    });
+    return unsub;
+  }, [authUser]);
+
+  if (loading) return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg,#ede7ff,#fce4ec)', flexDirection: 'column', gap: 16 }}>
+      <TwinLogo size={80} showText={false} />
+      <TwinLogo size={0} showText={true} textSize={26} />
+      <div style={{ fontSize: 13, color: '#9c6fff', fontWeight: 600 }}>Loading...</div>
+    </div>
+  );
+
+  if (!authUser) return <AuthScreen onAuth={u => setAuthUser(u)} />;
+
+  const handleChatOpen = user => { setChatWith(user); setTab('chat'); };
+  const handleBack = () => { setChatWith(null); setViewProfile(null); setTab(chatWith ? 'messages' : 'home'); };
+  const handleViewProfile = user => { setViewProfile(user); setTab('viewprofile'); };
+
+  return (
+    <LangContext.Provider value={{ t, setLang, lang }}>
+    <div className="app">
+      <Toast msg={toast} />
+      {tab === 'chat' && chatWith ? (
+        <ChatWindow me={userData} other={chatWith} onBack={handleBack} showToast={showToast} />
+      ) : tab === 'viewprofile' && viewProfile ? (
+        <ViewProfilePage me={userData} user={viewProfile} onBack={handleBack} onChat={handleChatOpen} showToast={showToast} />
+      ) : tab === 'settings' ? (
+        <SettingsPage me={userData} onBack={() => setTab('home')} showToast={showToast} lang={lang} setLang={setLang} />
+      ) : (
+        <>
+          {tab === 'home' && <HomePage me={userData} onViewProfile={handleViewProfile} showToast={showToast} setTab={setTab} notifCount={notifCount} />}
+          {tab === 'search' && <SearchPage me={userData} showToast={showToast} onViewProfile={handleViewProfile} />}
+          {tab === 'messages' && <MessagesPage me={userData} onChatOpen={handleChatOpen} />}
+          {tab === 'friends' && <FriendsPage me={userData} showToast={showToast} onChatOpen={handleChatOpen} />}
+          {tab === 'notif' && <NotifPage me={userData} showToast={showToast} onViewProfile={handleViewProfile} onChatOpen={handleChatOpen} />}
+          {tab === 'profile' && <ProfilePage me={userData} showToast={showToast} />}
+          <BottomNav tab={tab} setTab={setTab} notifCount={notifCount} t={t} />
+        </>
+      )}
+    </div>
+    </LangContext.Provider>
+  );
+}
+
+// ===== BOTTOM NAV =====
+function BottomNav({ tab, setTab, notifCount, t }) {
+  const labels = t || LANGS.en;
+  return (
+    <div className="bottom-nav">
+      {[['home','home',labels.home],['search','search',labels.search],null,['messages','msg',labels.chats],['friends','friends',labels.friends]].map((item, i) => {
+        if (!item) return (
+          <div key="plus" className="nav-center">
+            <div className="nav-center-btn" onClick={() => setTab('profile')}>
+              <Icon name="user" size={20} color="#fff" />
+            </div>
+          </div>
+        );
+        const [id, icon, label] = item;
+        return (
+          <div key={id} className={`nav-tab ${tab === id ? 'active' : ''}`} onClick={() => setTab(id)}>
+            <div style={{ position: 'relative' }}>
+              <Icon name={icon} size={22} color={tab === id ? '#7C4DFF' : '#9ca3af'} />
+              {id === 'friends' && notifCount > 0 && (
+                <div className="notif-badge">{notifCount > 9 ? '9+' : notifCount}</div>
+              )}
+            </div>
+            <span>{label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ===== LANGUAGE SYSTEM =====
+const LANGS = {
+  en: {
+    code: 'en', name: 'English', flag: '🇬🇧',
+    home: 'Home', search: 'Search', chats: 'Chats', friends: 'Friends', profile: 'Profile',
+    notifications: 'Notifications', noNotifs: 'No new notifications',
+    whatsOnMind: "What's on your mind?", post: 'Post', photo: 'Photo',
+    settings: 'Settings', language: 'Language', appearance: 'Appearance',
+    privacy: 'Privacy', account: 'Account', about: 'About', logout: 'Log Out',
+    myProfile: 'My Profile', searchPeople: 'Search People',
+    storiesTitle: 'Stories', you: 'You',
+    friendReq: 'Friend Requests', accept: 'Accept', decline: 'Decline',
+    online: 'Online', offline: 'Offline', typing: 'typing...',
+    messagePlaceholder: 'Message...', send: 'Send',
+    editProfile: 'Edit Profile', saveChanges: 'Save Changes',
+    noPostsYet: 'No posts yet. Be the first!',
+    createStory: 'Create Story', addPhoto: 'Add Photo', changePhoto: 'Change Photo',
+    shareStory: 'Share', addText: 'Add text to your story...',
+    theme: 'Theme', themeLight: 'Light', themeDark: 'Dark', themeSystem: 'System',
+    fontSize: 'Font Size', fontSmall: 'Small', fontMedium: 'Medium', fontLarge: 'Large',
+    langTitle: 'App Language', langSubtitle: 'Choose your preferred language',
+    deleteAccount: 'Delete Account', changePassword: 'Change Password',
+    notifSettings: 'Notification Settings', msgNotif: 'Message Notifications',
+    friendNotif: 'Friend Request Notifications', postNotif: 'Post Notifications',
+    version: 'Version', twinChatAbout: 'Twin Chat — Connect with your people.',
+  },
+  bn: {
+    code: 'bn', name: 'বাংলা', flag: '🇧🇩',
+    home: 'হোম', search: 'খুঁজুন', chats: 'চ্যাট', friends: 'বন্ধু', profile: 'প্রোফাইল',
+    notifications: 'নোটিফিকেশন', noNotifs: 'কোনো নতুন নোটিফিকেশন নেই',
+    whatsOnMind: 'কী মনে আসছে?', post: 'পোস্ট', photo: 'ছবি',
+    settings: 'সেটিংস', language: 'ভাষা', appearance: 'রূপসজ্জা',
+    privacy: 'গোপনীয়তা', account: 'অ্যাকাউন্ট', about: 'সম্পর্কে', logout: 'লগ আউট',
+    myProfile: 'আমার প্রোফাইল', searchPeople: 'মানুষ খুঁজুন',
+    storiesTitle: 'স্টোরি', you: 'আপনি',
+    friendReq: 'বন্ধু অনুরোধ', accept: 'গ্রহণ', decline: 'প্রত্যাখ্যান',
+    online: 'অনলাইন', offline: 'অফলাইন', typing: 'টাইপ করছে...',
+    messagePlaceholder: 'মেসেজ...', send: 'পাঠান',
+    editProfile: 'প্রোফাইল সম্পাদনা', saveChanges: 'সংরক্ষণ করুন',
+    noPostsYet: 'এখনো কোনো পোস্ট নেই। প্রথম হন!',
+    createStory: 'স্টোরি তৈরি', addPhoto: 'ছবি যোগ করুন', changePhoto: 'ছবি পরিবর্তন',
+    shareStory: 'শেয়ার', addText: 'স্টোরিতে লিখুন...',
+    theme: 'থিম', themeLight: 'আলো', themeDark: 'অন্ধকার', themeSystem: 'সিস্টেম',
+    fontSize: 'ফন্ট সাইজ', fontSmall: 'ছোট', fontMedium: 'মাঝারি', fontLarge: 'বড়',
+    langTitle: 'অ্যাপের ভাষা', langSubtitle: 'আপনার পছন্দের ভাষা বেছে নিন',
+    deleteAccount: 'অ্যাকাউন্ট মুছুন', changePassword: 'পাসওয়ার্ড পরিবর্তন',
+    notifSettings: 'নোটিফিকেশন সেটিংস', msgNotif: 'মেসেজ নোটিফিকেশন',
+    friendNotif: 'বন্ধু অনুরোধ নোটিফিকেশন', postNotif: 'পোস্ট নোটিফিকেশন',
+    version: 'সংস্করণ', twinChatAbout: 'Twin Chat — আপনার মানুষের সাথে যুক্ত থাকুন।',
+  },
+  hi: {
+    code: 'hi', name: 'हिन्दी', flag: '🇮🇳',
+    home: 'होम', search: 'खोजें', chats: 'चैट', friends: 'दोस्त', profile: 'प्रोफ़ाइल',
+    notifications: 'सूचनाएं', noNotifs: 'कोई नई सूचना नहीं',
+    whatsOnMind: 'क्या सोच रहे हैं?', post: 'पोस्ट', photo: 'फ़ोटो',
+    settings: 'सेटिंग्स', language: 'भाषा', appearance: 'दिखावट',
+    privacy: 'गोपनीयता', account: 'खाता', about: 'जानकारी', logout: 'लॉग आउट',
+    myProfile: 'मेरी प्रोफ़ाइल', searchPeople: 'लोगों को खोजें',
+    storiesTitle: 'स्टोरी', you: 'आप',
+    friendReq: 'मित्र अनुरोध', accept: 'स्वीकार', decline: 'अस्वीकार',
+    online: 'ऑनलाइन', offline: 'ऑफलाइन', typing: 'टाइप कर रहा है...',
+    messagePlaceholder: 'संदेश...', send: 'भेजें',
+    editProfile: 'प्रोफ़ाइल संपादित करें', saveChanges: 'सहेजें',
+    noPostsYet: 'अभी कोई पोस्ट नहीं। पहले बनें!',
+    createStory: 'स्टोरी बनाएं', addPhoto: 'फ़ोटो जोड़ें', changePhoto: 'फ़ोटो बदलें',
+    shareStory: 'शेयर', addText: 'अपनी स्टोरी में लिखें...',
+    theme: 'थीम', themeLight: 'लाइट', themeDark: 'डार्क', themeSystem: 'सिस्टम',
+    fontSize: 'फ़ॉन्ट साइज़', fontSmall: 'छोटा', fontMedium: 'मध्यम', fontLarge: 'बड़ा',
+    langTitle: 'ऐप की भाषा', langSubtitle: 'अपनी पसंदीदा भाषा चुनें',
+    deleteAccount: 'खाता हटाएं', changePassword: 'पासवर्ड बदलें',
+    notifSettings: 'सूचना सेटिंग्स', msgNotif: 'संदेश सूचनाएं',
+    friendNotif: 'मित्र अनुरोध सूचनाएं', postNotif: 'पोस्ट सूचनाएं',
+    version: 'संस्करण', twinChatAbout: 'Twin Chat — अपने लोगों से जुड़े रहें।',
+  },
+  ar: {
+    code: 'ar', name: 'العربية', flag: '🇸🇦',
+    home: 'الرئيسية', search: 'بحث', chats: 'المحادثات', friends: 'الأصدقاء', profile: 'الملف',
+    notifications: 'الإشعارات', noNotifs: 'لا توجد إشعارات جديدة',
+    whatsOnMind: 'ما الذي يدور في ذهنك؟', post: 'نشر', photo: 'صورة',
+    settings: 'الإعدادات', language: 'اللغة', appearance: 'المظهر',
+    privacy: 'الخصوصية', account: 'الحساب', about: 'حول', logout: 'تسجيل الخروج',
+    myProfile: 'ملفي', searchPeople: 'البحث عن أشخاص',
+    storiesTitle: 'القصص', you: 'أنت',
+    friendReq: 'طلبات الصداقة', accept: 'قبول', decline: 'رفض',
+    online: 'متصل', offline: 'غير متصل', typing: 'يكتب...',
+    messagePlaceholder: 'رسالة...', send: 'إرسال',
+    editProfile: 'تعديل الملف', saveChanges: 'حفظ',
+    noPostsYet: 'لا توجد منشورات بعد. كن الأول!',
+    createStory: 'إنشاء قصة', addPhoto: 'إضافة صورة', changePhoto: 'تغيير الصورة',
+    shareStory: 'مشاركة', addText: 'أضف نصاً لقصتك...',
+    theme: 'المظهر', themeLight: 'فاتح', themeDark: 'داكن', themeSystem: 'النظام',
+    fontSize: 'حجم الخط', fontSmall: 'صغير', fontMedium: 'متوسط', fontLarge: 'كبير',
+    langTitle: 'لغة التطبيق', langSubtitle: 'اختر لغتك المفضلة',
+    deleteAccount: 'حذف الحساب', changePassword: 'تغيير كلمة المرور',
+    notifSettings: 'إعدادات الإشعارات', msgNotif: 'إشعارات الرسائل',
+    friendNotif: 'إشعارات طلبات الصداقة', postNotif: 'إشعارات المنشورات',
+    version: 'الإصدار', twinChatAbout: 'Twin Chat — ابق على تواصل مع أحبائك.',
+  },
+  fr: {
+    code: 'fr', name: 'Français', flag: '🇫🇷',
+    home: 'Accueil', search: 'Recherche', chats: 'Chats', friends: 'Amis', profile: 'Profil',
+    notifications: 'Notifications', noNotifs: 'Aucune nouvelle notification',
+    whatsOnMind: 'À quoi pensez-vous?', post: 'Publier', photo: 'Photo',
+    settings: 'Paramètres', language: 'Langue', appearance: 'Apparence',
+    privacy: 'Confidentialité', account: 'Compte', about: 'À propos', logout: 'Déconnexion',
+    myProfile: 'Mon profil', searchPeople: 'Rechercher des personnes',
+    storiesTitle: 'Stories', you: 'Vous',
+    friendReq: "Demandes d'amis", accept: 'Accepter', decline: 'Refuser',
+    online: 'En ligne', offline: 'Hors ligne', typing: 'écrit...',
+    messagePlaceholder: 'Message...', send: 'Envoyer',
+    editProfile: 'Modifier le profil', saveChanges: 'Enregistrer',
+    noPostsYet: 'Pas encore de publications. Soyez le premier!',
+    createStory: 'Créer une story', addPhoto: 'Ajouter une photo', changePhoto: 'Changer la photo',
+    shareStory: 'Partager', addText: 'Ajouter du texte...',
+    theme: 'Thème', themeLight: 'Clair', themeDark: 'Sombre', themeSystem: 'Système',
+    fontSize: 'Taille de police', fontSmall: 'Petite', fontMedium: 'Moyenne', fontLarge: 'Grande',
+    langTitle: "Langue de l'application", langSubtitle: 'Choisissez votre langue préférée',
+    deleteAccount: 'Supprimer le compte', changePassword: 'Changer le mot de passe',
+    notifSettings: 'Paramètres de notification', msgNotif: 'Notifications de messages',
+    friendNotif: "Notifications de demandes d'amis", postNotif: 'Notifications de publications',
+    version: 'Version', twinChatAbout: 'Twin Chat — Restez connecté avec vos proches.',
+  },
+};
+
+// Global language context
+const LangContext = React.createContext({ t: LANGS.en, setLang: () => {} });
+const useLang = () => React.useContext(LangContext);
+
+// ===== IMAGE COMPRESS HELPER =====
+function compressImg(file, maxW = 1000, quality = 0.75) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ratio = Math.min(maxW / img.width, 1);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ===== STORY CREATOR =====
+function StoryCreator({ me, onClose, showToast }) {
+  const [imgData, setImgData] = useState('');
+  const [storyText, setStoryText] = useState('');
+  const [textColor, setTextColor] = useState('#ffffff');
+  const [bgColor, setBgColor] = useState('linear-gradient(135deg,#7C4DFF,#ff6b9d)');
+  const [posting, setPosting] = useState(false);
+  const fileRef = useRef(null);
+  const colors = ['#ffffff','#ffeb3b','#ff6b9d','#4fc3f7','#81c784','#ff9800','#e91e63'];
+  const bgs = [
+    'linear-gradient(135deg,#7C4DFF,#ff6b9d)',
+    'linear-gradient(135deg,#f06292,#ce93d8)',
+    'linear-gradient(135deg,#4fc3f7,#81d4fa)',
+    'linear-gradient(135deg,#81c784,#a5d6a7)',
+    'linear-gradient(135deg,#ffb74d,#ff8a65)',
+    'linear-gradient(135deg,#1a1a2e,#16213e)',
+  ];
+
+  const pickImg = async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const b64 = await compressImg(f, 900, 0.8);
+    setImgData(b64);
+  };
+
+  const post = async () => {
+    if (!imgData && !storyText.trim()) { showToast('❌ Add a photo or text'); return; }
+    setPosting(true);
+    try {
+      await db.collection('stories').add({
+        authorId: me.uid, authorName: me.name, authorPhoto: me.photoURL || '',
+        imageData: imgData, text: storyText.trim(), textColor,
+        bgColor: imgData ? '' : bgColor,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        views: []
+      });
+      showToast('✅ Story posted!');
+      onClose();
+    } catch(e) { showToast('❌ Failed: ' + e.message); }
+    setPosting(false);
+  };
+
+  return (
+    <div className="story-creator">
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 16px', background:'rgba(0,0,0,0.7)' }}>
+        <div onClick={onClose} style={{ color:'#fff', cursor:'pointer', fontSize:22, width:36, height:36, display:'flex', alignItems:'center', justifyContent:'center' }}>✕</div>
+        <span style={{ color:'#fff', fontWeight:800, fontSize:16 }}>📖 Create Story</span>
+        <button onClick={post} disabled={posting} style={{ background:'linear-gradient(135deg,#7C4DFF,#ff6b9d)', color:'#fff', border:'none', borderRadius:20, padding:'8px 18px', fontFamily:'Poppins', fontWeight:700, fontSize:13, cursor:'pointer' }}>
+          {posting ? '...' : 'Share'}
+        </button>
+      </div>
+
+      {/* Canvas */}
+      <div className="story-creator-canvas" style={{ background: imgData ? '#000' : bgColor }}>
+        {imgData
+          ? <img src={imgData} className="story-viewer-img" />
+          : <div style={{ textAlign:'center', padding:30 }}>
+              <div style={{ fontSize:60, marginBottom:16 }}>📸</div>
+              <div style={{ color:'rgba(255,255,255,0.5)', fontSize:14 }}>No photo — text only story</div>
+            </div>
+        }
+        {storyText && (
+          <div style={{ position:'absolute', bottom:20, left:0, right:0, padding:'0 20px', textAlign:'center' }}>
+            <div style={{ background:'rgba(0,0,0,0.55)', borderRadius:16, padding:'10px 16px', display:'inline-block', color:textColor, fontSize:18, fontWeight:700, lineHeight:1.4, maxWidth:'90%', wordBreak:'break-word' }}>{storyText}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Toolbar */}
+      <div style={{ background:'rgba(0,0,0,0.85)', padding:'10px 16px 20px' }}>
+        {/* Text input */}
+        <input className="story-text-input" placeholder="Add text to your story..." value={storyText} onChange={e => setStoryText(e.target.value)} style={{ marginBottom:10 }} />
+
+        {/* Text colors */}
+        <div style={{ display:'flex', gap:8, marginBottom:10, alignItems:'center' }}>
+          <span style={{ color:'#aaa', fontSize:11, fontWeight:600, width:40 }}>Text</span>
+          {colors.map(c => (
+            <div key={c} onClick={() => setTextColor(c)} style={{ width:24, height:24, borderRadius:'50%', background:c, border: textColor===c ? '2.5px solid #fff' : '2px solid rgba(255,255,255,0.2)', cursor:'pointer', flexShrink:0, boxShadow: textColor===c ? '0 0 0 2px #7C4DFF' : 'none' }} />
+          ))}
+        </div>
+
+        {/* BG colors (only when no image) */}
+        {!imgData && (
+          <div style={{ display:'flex', gap:8, marginBottom:10, alignItems:'center', overflowX:'auto' }}>
+            <span style={{ color:'#aaa', fontSize:11, fontWeight:600, width:40, flexShrink:0 }}>BG</span>
+            {bgs.map((b,i) => (
+              <div key={i} onClick={() => setBgColor(b)} style={{ width:28, height:28, borderRadius:8, background:b, border: bgColor===b ? '2.5px solid #fff' : '2px solid rgba(255,255,255,0.2)', cursor:'pointer', flexShrink:0, boxShadow: bgColor===b ? '0 0 0 2px #7C4DFF' : 'none' }} />
+            ))}
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div style={{ display:'flex', gap:10 }}>
+          <label style={{ flex:1, cursor:'pointer' }}>
+            <input ref={fileRef} type="file" accept="image/*" style={{ display:'none' }} onChange={pickImg} />
+            <div style={{ background:'rgba(255,255,255,0.12)', border:'1.5px solid rgba(255,255,255,0.25)', borderRadius:14, padding:'11px', textAlign:'center', color:'#fff', fontSize:13, fontWeight:600 }}>
+              📷 {imgData ? 'Change Photo' : 'Add Photo'}
+            </div>
+          </label>
+          {imgData && (
+            <div onClick={() => setImgData('')} style={{ background:'rgba(229,57,53,0.2)', border:'1.5px solid #e53935', borderRadius:14, padding:'11px 16px', color:'#e53935', fontSize:13, fontWeight:600, cursor:'pointer' }}>🗑️</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== STORY VIEWER =====
+function StoryViewer({ stories, startIdx, me, onClose }) {
+  const [idx, setIdx] = useState(startIdx);
+  const [progress, setProgress] = useState(0);
+  const timerRef = useRef(null);
+  const story = stories[idx];
+  const DURATION = 5000;
+
+  useEffect(() => {
+    setProgress(0);
+    const start = Date.now();
+    timerRef.current = setInterval(() => {
+      const p = Math.min(100, ((Date.now() - start) / DURATION) * 100);
+      setProgress(p);
+      if (p >= 100) { clearInterval(timerRef.current); goNext(); }
+    }, 80);
+    // mark view
+    if (story && me && !story.views?.includes(me.uid)) {
+      db.collection('stories').doc(story.id).update({ views: firebase.firestore.FieldValue.arrayUnion(me.uid) }).catch(() => {});
+    }
+    return () => clearInterval(timerRef.current);
+  }, [idx]);
+
+  const goNext = () => { if (idx < stories.length - 1) setIdx(i => i + 1); else onClose(); };
+  const goPrev = () => { if (idx > 0) setIdx(i => i - 1); };
+
+  if (!story) return null;
+  return (
+    <div className="story-viewer" onClick={e => e.stopPropagation()}>
+      {/* Progress bars */}
+      <div className="story-progress-bar">
+        {stories.map((_, i) => (
+          <div key={i} className="story-seg">
+            <div className="story-seg-fill" style={{ width: i < idx ? '100%' : i === idx ? progress + '%' : '0%' }} />
+          </div>
+        ))}
+      </div>
+      {/* Header */}
+      <div className="story-viewer-head">
+        <div style={{ width:36, height:36, borderRadius:'50%', background:'linear-gradient(135deg,#7C4DFF,#ff6b9d)', overflow:'hidden', flexShrink:0 }}>
+          {story.authorPhoto ? <img src={story.authorPhoto} style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : <div style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:700 }}>{(story.authorName||'?')[0]}</div>}
+        </div>
+        <div style={{ flex:1 }}>
+          <div style={{ color:'#fff', fontWeight:700, fontSize:14 }}>{story.authorName}</div>
+          <div style={{ color:'rgba(255,255,255,0.65)', fontSize:11 }}>{timeAgo(story.createdAt)}</div>
+        </div>
+        <div onClick={onClose} style={{ color:'#fff', fontSize:24, cursor:'pointer', padding:'0 4px' }}>✕</div>
+      </div>
+      {/* Body */}
+      <div className="story-viewer-body" style={{ background: story.bgColor || '#000' }}>
+        {story.imageData && <img src={story.imageData} className="story-viewer-img" />}
+        {story.text && (
+          <div className="story-viewer-text">
+            <span style={{ color: story.textColor || '#fff', textShadow:'0 2px 8px rgba(0,0,0,0.8)' }}>{story.text}</span>
+          </div>
+        )}
+        <div className="story-viewer-tap-left" onClick={goPrev} />
+        <div className="story-viewer-tap-right" onClick={goNext} />
+      </div>
+      {/* Views count */}
+      <div style={{ background:'rgba(0,0,0,0.6)', padding:'10px 20px', display:'flex', alignItems:'center', gap:6 }}>
+        <span style={{ fontSize:16 }}>👁️</span>
+        <span style={{ color:'rgba(255,255,255,0.8)', fontSize:13 }}>{(story.views||[]).length} views</span>
+      </div>
+    </div>
+  );
+}
+
+// ===== HOME PAGE =====
+function HomePage({ me, onViewProfile, showToast, setTab, notifCount }) {
+  const { t } = useLang();
+  const [posts, setPosts] = useState([]);
+  const [users, setUsers] = useState({});
+  const [newPost, setNewPost] = useState('');
+  const [postImgs, setPostImgs] = useState([]);
+  const [posting, setPosting] = useState(false);
+  const [showCreator, setShowCreator] = useState(false);
+  const [viewingStories, setViewingStories] = useState(null);
+  const [allStories, setAllStories] = useState([]);
+  const [showNotifDrop, setShowNotifDrop] = useState(false);
+  const [showDotMenu, setShowDotMenu] = useState(false);
+  const [notifItems, setNotifItems] = useState([]);
+  const postImgRef = useRef(null);
+
+  // Load notifications (friend requests)
+  useEffect(() => {
+    if (!me?.uid) return;
+    const reqs = me.friendRequests || [];
+    if (!reqs.length) { setNotifItems([]); return; }
+    Promise.all(reqs.map(uid =>
+      db.collection('users').doc(uid).get().then(s => s.exists ? ({ uid, name: s.data().name, photo: s.data().photoURL, userData: s.data() }) : null)
+    )).then(items => setNotifItems(items.filter(Boolean)));
+  }, [me?.friendRequests]);
+
+  const acceptReq = async (item, e) => {
+    e.stopPropagation();
+    const batch = db.batch();
+    batch.update(db.collection('users').doc(me.uid), {
+      friends: firebase.firestore.FieldValue.arrayUnion(item.uid),
+      friendRequests: firebase.firestore.FieldValue.arrayRemove(item.uid),
+    });
+    batch.update(db.collection('users').doc(item.uid), {
+      friends: firebase.firestore.FieldValue.arrayUnion(me.uid),
+      sentRequests: firebase.firestore.FieldValue.arrayRemove(me.uid),
+    });
+    await batch.commit();
+    showToast('✅ Friend accepted!');
+  };
+
+  const declineReq = async (item, e) => {
+    e.stopPropagation();
+    await db.collection('users').doc(me.uid).update({ friendRequests: firebase.firestore.FieldValue.arrayRemove(item.uid) });
+    await db.collection('users').doc(item.uid).update({ sentRequests: firebase.firestore.FieldValue.arrayRemove(me.uid) });
+    showToast('Declined');
+  };
+
+  // Load posts
+  useEffect(() => {
+    const unsub = db.collection('posts').orderBy('createdAt', 'desc').limit(30).onSnapshot(snap => {
+      const ps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setPosts(ps);
+      const uids = [...new Set(ps.map(p => p.authorId).filter(Boolean))];
+      uids.forEach(uid => {
+        if (!users[uid]) db.collection('users').doc(uid).get().then(s => {
+          if (s.exists) setUsers(prev => ({ ...prev, [uid]: s.data() }));
+        });
+      });
+    });
+    return unsub;
+  }, []);
+
+  // Load stories (last 24h)
+  useEffect(() => {
+    const cutoff = new Date(Date.now() - 24*60*60*1000);
+    const unsub = db.collection('stories').where('createdAt', '>', cutoff).orderBy('createdAt','desc').onSnapshot(snap => {
+      setAllStories(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return unsub;
+  }, []);
+
+  // Group stories by author
+  const myStories = allStories.filter(s => s.authorId === me?.uid);
+  const friendIds = me?.friends || [];
+  // unique friend authors who have stories
+  const friendStoryAuthors = [...new Map(
+    allStories.filter(s => s.authorId !== me?.uid && (friendIds.includes(s.authorId) || true))
+      .map(s => [s.authorId, s])
+  ).values()];
+
+  const openStory = (authorId) => {
+    const group = allStories.filter(s => s.authorId === authorId);
+    if (group.length) setViewingStories({ stories: group, startIdx: 0 });
+  };
+
+  const createPost = async () => {
+    if (!newPost.trim() && postImgs.length === 0) return;
+    if (!me) return;
+    setPosting(true);
+    await db.collection('posts').add({
+      authorId: me.uid, text: newPost.trim(),
+      images: postImgs, // array of base64
+      imageURL: postImgs[0] || '', // backward compat
+      likes: [], commentCount: 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    setNewPost(''); setPostImgs([]); setPosting(false);
+    showToast('✅ Post shared!');
+  };
+
+  const pickPostImgs = async (e) => {
+    const files = Array.from(e.target.files).slice(0, 6);
+    const compressed = await Promise.all(files.map(f => compressImg(f, 1000, 0.75)));
+    setPostImgs(prev => [...prev, ...compressed].slice(0, 6));
+    e.target.value = '';
+  };
+
+  const toggleLike = async (post) => {
+    const liked = post.likes?.includes(me.uid);
+    await db.collection('posts').doc(post.id).update({
+      likes: liked ? firebase.firestore.FieldValue.arrayRemove(me.uid) : firebase.firestore.FieldValue.arrayUnion(me.uid)
+    });
+  };
+
+  const PostImages = ({ images }) => {
+    const imgs = images?.length ? images : [];
+    if (!imgs.length) return null;
+    const n = imgs.length;
+    if (n === 1) return (
+      <div className="post-img-grid n1"><div className="post-img-cell" style={{ aspectRatio:'4/3' }}><img src={imgs[0]} /></div></div>
+    );
+    if (n === 2) return (
+      <div className="post-img-grid n2">{imgs.map((s,i) => <div key={i} className="post-img-cell tall"><img src={s} /></div>)}</div>
+    );
+    if (n === 3) return (
+      <div className="post-img-grid n3">
+        <div className="post-img-cell span2"><img src={imgs[0]} /></div>
+        <div className="post-img-cell tall"><img src={imgs[1]} /></div>
+        <div className="post-img-cell tall"><img src={imgs[2]} /></div>
+      </div>
+    );
+    return (
+      <div className="post-img-grid n4plus">
+        {imgs.slice(0,3).map((s,i) => <div key={i} className="post-img-cell tall"><img src={s} /></div>)}
+        <div className="post-img-cell post-img-more">+{n-3}</div>
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      {showCreator && <StoryCreator me={me} onClose={() => setShowCreator(false)} showToast={showToast} />}
+      {viewingStories && <StoryViewer stories={viewingStories.stories} startIdx={viewingStories.startIdx} me={me} onClose={() => setViewingStories(null)} />}
+
+      {/* Overlay to close dropdowns */}
+      {(showNotifDrop || showDotMenu) && (
+        <div style={{ position:'fixed', inset:0, zIndex:299 }} onClick={() => { setShowNotifDrop(false); setShowDotMenu(false); }} />
+      )}
+
+      {/* Notification Dropdown */}
+      {showNotifDrop && (
+        <div className="notif-dropdown">
+          <div className="notif-dropdown-head">
+            <span style={{ fontWeight:800, fontSize:15, color:'#1a1a2e' }}>🔔 Notifications</span>
+            {notifItems.length > 0 && <span style={{ fontSize:11, background:'#7C4DFF', color:'#fff', borderRadius:20, padding:'2px 9px', fontWeight:700 }}>{notifItems.length} new</span>}
+          </div>
+          <div className="notif-dropdown-body">
+            {notifItems.length === 0 ? (
+              <div style={{ textAlign:'center', padding:'32px 16px', color:'#9ca3af', fontSize:13 }}>
+                <div style={{ fontSize:36, marginBottom:8 }}>🔔</div>
+                No new notifications
+              </div>
+            ) : notifItems.map(item => (
+              <div key={item.uid} className="notif-row unread">
+                <div className="notif-avatar">
+                  {item.photo ? <img src={item.photo} style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : (item.name||'?')[0]}
+                </div>
+                <div className="notif-content">
+                  <div className="notif-content-name">{item.name}</div>
+                  <div className="notif-content-text">sent you a friend request 👥</div>
+                  <div className="notif-content-actions">
+                    <button className="notif-btn-accept" onClick={e => acceptReq(item, e)}>✅ Accept</button>
+                    <button className="notif-btn-decline" onClick={e => declineReq(item, e)}>✕ Decline</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 3-dot Menu */}
+      {showDotMenu && (
+        <div className="dots-menu">
+          <div className="dots-menu-item" onClick={() => { setShowDotMenu(false); setTab('profile'); }}>
+            <span style={{ fontSize:18 }}>👤</span> {t.myProfile}
+          </div>
+          <div className="dots-menu-item" onClick={() => { setShowDotMenu(false); setTab('friends'); }}>
+            <span style={{ fontSize:18 }}>👥</span> {t.friends}
+          </div>
+          <div className="dots-menu-item" onClick={() => { setShowDotMenu(false); setTab('search'); }}>
+            <span style={{ fontSize:18 }}>🔍</span> {t.searchPeople}
+          </div>
+          <div className="dots-menu-divider" />
+          <div className="dots-menu-item" onClick={() => { setShowDotMenu(false); setTab('settings'); }}>
+            <span style={{ fontSize:18 }}>⚙️</span> {t.settings}
+          </div>
+          <div className="dots-menu-item" onClick={() => { setShowDotMenu(false); setSection && setSection('about'); setTab('settings'); }}>
+            <span style={{ fontSize:18 }}>ℹ️</span> {t.about}
+          </div>
+          <div className="dots-menu-divider" />
+          <div className="dots-menu-item danger" onClick={() => { setShowDotMenu(false); auth.signOut(); }}>
+            <span style={{ fontSize:18 }}>🚪</span> Log Out
+          </div>
+        </div>
+      )}
+
+      {/* Topbar */}
+      <div className="topbar" style={{ position:'sticky', top:0, zIndex:100 }}>
+        <span className="topbar-logo"><TwinLogo size={28} textSize={18} /></span>
+        <div className="topbar-icons">
+          <div className="icon-btn" onClick={() => setShowCreator(true)}>📷</div>
+          <div className="icon-btn" onClick={() => { setShowNotifDrop(v => !v); setShowDotMenu(false); }} style={{ position:'relative' }}>
+            🔔
+            {notifCount > 0 && <div className="notif-badge">{notifCount > 9 ? '9+' : notifCount}</div>}
+          </div>
+          <div className="icon-btn" onClick={() => { setShowDotMenu(v => !v); setShowNotifDrop(false); }} style={{ fontSize:20, fontWeight:800, letterSpacing:1 }}>⋮</div>
+        </div>
+      </div>
+      <div className="page-content">
+        {/* Stories */}
+        <div className="stories">
+          {/* My story button */}
+          <div className="story-item" onClick={() => myStories.length ? openStory(me.uid) : setShowCreator(true)}>
+            <div className={`story-ring ${myStories.length ? '' : 'you'}`} style={{ position:'relative' }}>
+              <div className="story-avatar">
+                {me?.photoURL ? <img src={me.photoURL} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%' }} /> : (me?.name||'?')[0]}
+              </div>
+              {!myStories.length && <div className="story-add">+</div>}
+            </div>
+            <span className="story-name">You</span>
+          </div>
+          {/* Friends stories */}
+          {friendStoryAuthors.map((s, i) => (
+            <div key={s.authorId||i} className="story-item" onClick={() => openStory(s.authorId)}>
+              <div className="story-ring">
+                <div className="story-avatar">
+                  {s.authorPhoto ? <img src={s.authorPhoto} style={{ width:'100%', height:'100%', objectFit:'cover', borderRadius:'50%' }} /> : (s.authorName||'?')[0]}
+                </div>
+              </div>
+              <span className="story-name">{s.authorName}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Create Post */}
+        <div style={{ background:'#fff', padding:'12px 16px 8px', borderBottom:'8px solid #f0f4ff' }}>
+          <div style={{ display:'flex', gap:10, alignItems:'flex-end' }}>
+            <Avatar user={me} size={38} />
+            <div style={{ flex:1 }}>
+              <input className="inp" style={{ borderRadius:20, padding:'9px 16px', fontSize:13 }}
+                placeholder={t.whatsOnMind}
+                value={newPost} onChange={e => setNewPost(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && createPost()} />
+            </div>
+          </div>
+          {/* Image previews */}
+          {postImgs.length > 0 && (
+            <div className="img-preview-strip" style={{ marginTop:8 }}>
+              {postImgs.map((src, i) => (
+                <div key={i} className="img-preview-item">
+                  <img src={src} />
+                  <div className="img-preview-rm" onClick={() => setPostImgs(p => p.filter((_,j) => j!==i))}>✕</div>
+                </div>
+              ))}
+              {postImgs.length < 6 && (
+                <label style={{ width:60, height:60, borderRadius:10, background:'#ede7ff', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, fontSize:22, border:'2px dashed #7C4DFF' }}>
+                  <input type="file" accept="image/*" multiple style={{ display:'none' }} onChange={pickPostImgs} />+
+                </label>
+              )}
+            </div>
+          )}
+          {/* Action row */}
+          <div style={{ display:'flex', gap:8, marginTop:8, alignItems:'center' }}>
+            <label style={{ cursor:'pointer', display:'flex', alignItems:'center', gap:5, color:'#7C4DFF', fontSize:12, fontWeight:600, background:'#ede7ff', borderRadius:20, padding:'6px 12px' }}>
+              <input ref={postImgRef} type="file" accept="image/*" multiple style={{ display:'none' }} onChange={pickPostImgs} />
+              📷 Photo
+            </label>
+            <div style={{ flex:1 }} />
+            <button onClick={createPost} disabled={posting || (!newPost.trim() && !postImgs.length)} style={{ background:'linear-gradient(135deg,#7C4DFF,#ff6b9d)', border:'none', borderRadius:12, padding:'8px 20px', color:'#fff', fontFamily:'Poppins', fontWeight:700, fontSize:13, cursor:'pointer', opacity: (posting||(!newPost.trim()&&!postImgs.length)) ? 0.6 : 1 }}>
+              {posting ? '...' : 'Post'}
+            </button>
+          </div>
+        </div>
+
+        {/* Feed */}
+        {posts.map(post => {
+          const author = users[post.authorId] || {};
+          const liked = post.likes?.includes(me?.uid);
+          const imgs = post.images?.length ? post.images : (post.imageURL ? [post.imageURL] : []);
+          return (
+            <div key={post.id} className="post-card">
+              <div className="post-head">
+                <div className="post-avatar" onClick={() => author.uid && onViewProfile(author)} style={{ cursor:'pointer' }}>
+                  <Avatar user={author} size={42} />
+                </div>
+                <div className="post-info">
+                  <div className="post-author">{author.name || 'User'}</div>
+                  <div className="post-loc">{timeAgo(post.createdAt)}</div>
+                </div>
+                <div className="post-menu-btn">···</div>
+              </div>
+              {post.text && <div className="post-text">{post.text}</div>}
+              <PostImages images={imgs} />
+              <div className="post-actions">
+                <div className={`action-btn ${liked ? 'liked' : ''}`} onClick={() => toggleLike(post)}>
+                  <Icon name="heart" size={18} color={liked ? '#ff6b9d' : '#9ca3af'} />
+                  <span>{post.likes?.length || 0}</span>
+                </div>
+                <div className="action-btn">
+                  <Icon name="comment" size={18} color="#9ca3af" />
+                  <span>{post.commentCount || 0}</span>
+                </div>
+                <div className="action-btn">
+                  <Icon name="share" size={18} color="#9ca3af" />
+                  <span>{post.shareCount || 0}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {posts.length === 0 && (
+          <div className="empty-state">
+            <div className="emoji">📝</div>
+            <p>No posts yet. Be the first!</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ===== SEARCH PAGE =====
+function SearchPage({ me, showToast, onViewProfile }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+
+  const search = async (q) => {
+    if (!q.trim()) { setResults([]); return; }
+    setSearching(true);
+    const snap = await db.collection('users').get();
+    const all = snap.docs.map(d => d.data()).filter(u => u.uid !== me.uid);
+    const q2 = q.toLowerCase();
+    setResults(all.filter(u => (u.name || '').toLowerCase().includes(q2) || (u.email || '').toLowerCase().includes(q2)));
+    setSearching(false);
+  };
+
+  useEffect(() => {
+    const t = setTimeout(() => search(query), 400);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  const sendRequest = async (user) => {
+    if ((me.sentRequests || []).includes(user.uid)) return;
+    if ((me.friends || []).includes(user.uid)) return;
+    const batch = db.batch();
+    batch.update(db.collection('users').doc(me.uid), { sentRequests: firebase.firestore.FieldValue.arrayUnion(user.uid) });
+    batch.update(db.collection('users').doc(user.uid), { friendRequests: firebase.firestore.FieldValue.arrayUnion(me.uid) });
+    await batch.commit();
+    showToast(`✅ Friend request sent to ${user.name}`);
+  };
+
+  const getStatus = (user) => {
+    if ((me.friends || []).includes(user.uid)) return 'friends';
+    if ((me.sentRequests || []).includes(user.uid)) return 'sent';
+    if ((me.friendRequests || []).includes(user.uid)) return 'received';
+    return 'none';
+  };
+
+  return (
+    <div>
+      <div className="topbar"><span className="topbar-logo">Search</span></div>
+      <div className="search-bar-wrap">
+        <div className="search-bar">
+          <Icon name="search" size={16} color="#9ca3af" />
+          <input placeholder="Search people by name or email..." value={query} onChange={e => setQuery(e.target.value)} autoFocus />
+          {query && <span onClick={() => setQuery('')} style={{ cursor: 'pointer', color: '#9ca3af' }}>✕</span>}
+        </div>
+      </div>
+      <div className="page-content">
+        {searching && <div style={{ textAlign: 'center', padding: 24, color: '#9ca3af', fontSize: 13 }}>Searching...</div>}
+        {results.map(user => {
+          const status = getStatus(user);
+          return (
+            <div key={user.uid} className="search-result-item" onClick={() => onViewProfile(user)}>
+              <Avatar user={user} size={46} />
+              <div className="search-result-info">
+                <div className="search-result-name">{user.name}</div>
+                <div className="search-result-meta">{(user.friends || []).length} friends</div>
+              </div>
+              {status === 'friends' && <span className="btn-added">Friends ✓</span>}
+              {status === 'sent' && <span className="btn-added">Requested</span>}
+              {status === 'received' && <span className="btn-added">Received</span>}
+              {status === 'none' && (
+                <button className="btn-add" onClick={e => { e.stopPropagation(); sendRequest(user); }}>+ Add</button>
+              )}
+            </div>
+          );
+        })}
+        {query && results.length === 0 && !searching && (
+          <div className="empty-state"><div className="emoji">🔍</div><p>No users found for "{query}"</p></div>
+        )}
+        {!query && (
+          <div className="empty-state"><div className="emoji">👥</div><p>Search for people to connect</p></div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ===== MESSAGES PAGE =====
+function MessagesPage({ me, onChatOpen }) {
+  const [convos, setConvos] = useState([]);
+  const [friends, setFriends] = useState([]);
+
+  useEffect(() => {
+    if (!me) return;
+    const fids = me.friends || [];
+    if (fids.length === 0) return;
+    Promise.all(fids.map(uid => db.collection('users').doc(uid).get())).then(snaps => {
+      setFriends(snaps.map(s => s.data()).filter(Boolean));
+    });
+  }, [me]);
+
+  return (
+    <div>
+      <div className="topbar"><span className="topbar-logo">Messages</span></div>
+      <div className="search-bar-wrap">
+        <div className="search-bar">
+          <Icon name="search" size={16} color="#9ca3af" />
+          <input placeholder="Search conversations..." />
+        </div>
+      </div>
+      <div className="page-content">
+        {friends.length === 0 ? (
+          <div className="empty-state"><div className="emoji">💬</div><p>Add friends to start chatting</p></div>
+        ) : (
+          friends.map(f => (
+            <div key={f.uid} className="msg-list-item" onClick={() => onChatOpen(f)}>
+              <div className="msg-list-avatar">
+                <Avatar user={f} size={50} />
+                <div className="online-dot" />
+              </div>
+              <div className="msg-list-info">
+                <div className="msg-list-name">{f.name}</div>
+                <div className="msg-list-preview">Tap to start chatting</div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                <div className="msg-list-time">Now</div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ===== CHAT WINDOW - WhatsApp Style =====
+const EMOJIS = ['😀','😂','🥰','😍','😎','🤩','😭','😤','🥺','😏','👍','👎','❤️','🔥','✨','🎉','💯','🙏','👏','🤝','😊','😢','😡','🤔','💪','🎵','🌹','💐','🦋','⭐','🌙','☀️','🍎','🍕','☕','🎮','📱','💬','📸','🌍'];
+
+function ChatWindow({ me, other, onBack, showToast }) {
+  const [messages, setMessages] = useState([]);
+  const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+  const [showEmoji, setShowEmoji] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const [msgMenu, setMsgMenu] = useState(null); // { id, text }
+  const [editingMsg, setEditingMsg] = useState(null); // { id, text }
+  const [pendingImgs, setPendingImgs] = useState([]); // images to send
+  const imgInputRef = useRef(null);
+  const bottomRef = useRef(null);
+  const inputRef = useRef(null);
+  const chatId = [me.uid, other.uid].sort().join('_');
+
+  useEffect(() => {
+    const unsub = db.collection('chats').doc(chatId).collection('messages')
+      .orderBy('createdAt').onSnapshot(snap => {
+        setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      });
+    return unsub;
+  }, [chatId]);
+
+  useEffect(() => {
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
+  }, [messages]);
+
+  const sendMsg = async () => {
+    const t = text.trim();
+    if (!t && pendingImgs.length === 0) return;
+    if (sending) return;
+    setSending(true);
+    setText('');
+    setShowEmoji(false);
+    const batch = db.batch();
+    // Send each image as separate message
+    for (const imgData of pendingImgs) {
+      const ref = db.collection('chats').doc(chatId).collection('messages').doc();
+      batch.set(ref, { senderId: me.uid, imageData: imgData, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+    // Send text message if any
+    if (t) {
+      const ref = db.collection('chats').doc(chatId).collection('messages').doc();
+      batch.set(ref, { senderId: me.uid, text: t, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    }
+    await batch.commit();
+    await db.collection('chats').doc(chatId).set({
+      participants: [me.uid, other.uid],
+      lastMessage: t || '📷 Photo', lastAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    setPendingImgs([]);
+    setSending(false);
+    inputRef.current?.focus();
+  };
+
+  const pickChatImg = async (e) => {
+    const files = Array.from(e.target.files).slice(0, 5);
+    const compressed = await Promise.all(files.map(f => compressImg(f, 900, 0.75)));
+    setPendingImgs(prev => [...prev, ...compressed].slice(0, 5));
+    e.target.value = '';
+  };
+
+  const handleKey = e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); editingMsg ? saveEdit() : sendMsg(); }
+  };
+
+  const deleteMsg = async (msgId) => {
+    setMsgMenu(null);
+    await db.collection('chats').doc(chatId).collection('messages').doc(msgId).delete();
+    showToast('🗑️ Message deleted');
+  };
+
+  const startEdit = (msg) => {
+    setMsgMenu(null);
+    setEditingMsg({ id: msg.id, text: msg.text });
+    setText(msg.text);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  };
+
+  const saveEdit = async () => {
+    const t = text.trim();
+    if (!t || !editingMsg) return;
+    await db.collection('chats').doc(chatId).collection('messages').doc(editingMsg.id).update({ text: t, edited: true });
+    setText(''); setEditingMsg(null);
+    showToast('✏️ Message edited');
+  };
+
+  const cancelEdit = () => { setEditingMsg(null); setText(''); };
+
+  // Group messages by date
+  const groupedMsgs = [];
+  let lastDate = '';
+  messages.forEach((msg, i) => {
+    const d = msg.createdAt?.toDate ? msg.createdAt.toDate() : new Date();
+    const dateStr = d.toLocaleDateString('en-BD', { day: 'numeric', month: 'long', year: 'numeric' });
+    if (dateStr !== lastDate) {
+      groupedMsgs.push({ type: 'date', label: dateStr });
+      lastDate = dateStr;
+    }
+    const prev = messages[i - 1];
+    const next = messages[i + 1];
+    const isMine = msg.senderId === me.uid;
+    const prevSame = prev && prev.senderId === msg.senderId;
+    const nextSame = next && next.senderId === msg.senderId;
+    groupedMsgs.push({ ...msg, isMine, isFirst: !prevSame, isLast: !nextSame });
+  });
+
+  const isEmojiOnly = txt => /^[\p{Emoji}\s]+$/u.test(txt) && txt.trim().length <= 6;
+
+  return (
+    <div className="chat-screen">
+      {/* HEADER */}
+      <div className="chat-header">
+        <div className="chat-back" onClick={onBack}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </div>
+        <div className="chat-header-avatar-wrap">
+          <div className="chat-header-avatar">
+            {other.photoURL ? <img src={other.photoURL}/> : <span style={{color:'#fff',fontWeight:700,fontSize:16}}>{(other.name||'U')[0]}</span>}
+          </div>
+          <div className="chat-online-ring"/>
+        </div>
+        <div className="chat-header-info">
+          <div className="chat-header-name">{other.name}</div>
+          <div className="chat-header-status">● Online</div>
+        </div>
+        <div className="chat-header-actions">
+          <div className="chat-action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.8 10a19.79 19.79 0 01-3.07-8.67A2 2 0 012.7 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l1.06-1.06a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.07z"/></svg>
+          </div>
+          <div className="chat-action-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          </div>
+        </div>
+      </div>
+
+      {/* BODY */}
+      <div className="chat-body" onClick={() => setShowEmoji(false)}>
+        {messages.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '50px 20px', color: '#78909c' }}>
+            <div style={{ fontSize: 56, marginBottom: 12 }}>👋</div>
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6, color: '#546e7a' }}>Say hi to {other.name}!</div>
+            <div style={{ fontSize: 12, color: '#90a4ae' }}>Messages are private between you two</div>
+          </div>
+        )}
+
+        {groupedMsgs.map((item, idx) => {
+          if (item.type === 'date') return (
+            <div key={'d'+idx} className="date-sep">
+              <div className="date-sep-pill">{item.label}</div>
+            </div>
+          );
+
+          const emojiOnly = isEmojiOnly(item.text || '');
+
+          return (
+            <div key={item.id} className={`msg-row ${item.isMine ? 'mine' : ''}`} style={{ marginBottom: item.isLast ? 6 : 1 }}
+              onContextMenu={e => { if (item.isMine) { e.preventDefault(); setMsgMenu(item); } }}
+              onTouchStart={item.isMine ? (() => {
+                const t = setTimeout(() => setMsgMenu(item), 600);
+                const clear = () => clearTimeout(t);
+                document.addEventListener('touchend', clear, { once: true });
+                document.addEventListener('touchmove', clear, { once: true });
+              }) : undefined}
+            >
+              {/* Other's avatar — only on last in group */}
+              {!item.isMine && (
+                <div className={`chat-bubble-avatar ${!item.isLast ? 'hidden' : ''}`}>
+                  {other.photoURL ? <img src={other.photoURL}/> : (other.name||'U')[0]}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: item.isMine ? 'flex-end' : 'flex-start', gap: 1 }}>
+                {item.imageData ? (
+                  <div className={`bubble-img ${item.isMine ? 'mine' : 'theirs'}`} style={{ border: item.isMine ? '2px solid rgba(124,77,255,0.3)' : '2px solid #e8eaf6' }}>
+                    <img src={item.imageData} style={{ maxWidth:220, borderRadius:12, display:'block' }} />
+                    <div style={{ fontSize:10, color: item.isMine ? 'rgba(255,255,255,0.7)' : '#78909c', textAlign:'right', padding:'2px 6px 4px' }}>{fmtTime(item.createdAt)}</div>
+                  </div>
+                ) : (
+                <div className={`msg-bubble ${item.isMine ? 'mine' : 'theirs'} ${!item.isFirst ? 'no-tail' : ''} ${emojiOnly ? 'emoji-only' : ''}`}>
+                  {item.text}
+                  {item.edited && !emojiOnly && <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 4 }}>edited</span>}
+                  {!emojiOnly && (
+                    <div className={`msg-meta ${item.isMine ? 'mine' : 'theirs'}`}>
+                      <span className="msg-meta-time">{fmtTime(item.createdAt)}</span>
+                      {item.isMine && (
+                        <span className="msg-tick">
+                          <svg viewBox="0 0 18 18" fill="none">
+                            <path d="M3 9l4 4L15 5" stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M6 9l4 4" stroke="rgba(255,255,255,0.8)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                )}
+                {emojiOnly && !item.imageData && (
+                  <div style={{ fontSize: 10, color: '#78909c', marginTop: 1, paddingRight: item.isMine ? 2 : 0, paddingLeft: item.isMine ? 0 : 2 }}>
+                    {fmtTime(item.createdAt)}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Typing indicator */}
+        {typing && (
+          <div className="msg-row">
+            <div className="chat-bubble-avatar">{(other.name||'U')[0]}</div>
+            <div className="typing-indicator">
+              <div className="typing-dot"/>
+              <div className="typing-dot"/>
+              <div className="typing-dot"/>
+            </div>
+          </div>
+        )}
+
+        <div ref={bottomRef}/>
+      </div>
+
+      {/* EMOJI PICKER */}
+      {showEmoji && (
+        <div className="emoji-picker" onClick={e => e.stopPropagation()}>
+          {EMOJIS.map(em => (
+            <div key={em} className="emoji-item" onClick={() => { setText(prev => prev + em); inputRef.current?.focus(); }}>
+              {em}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* MSG MENU OVERLAY */}
+      {msgMenu && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, background: 'rgba(0,0,0,0.3)' }} onClick={() => setMsgMenu(null)}>
+          <div style={{ position: 'absolute', bottom: 90, left: '50%', transform: 'translateX(-50%)', background: '#fff', borderRadius: 18, padding: '6px 0', minWidth: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '4px 8px 8px', textAlign: 'center', fontSize: 12, color: '#9ca3af', borderBottom: '1px solid #f0f4ff' }}>
+              {(msgMenu.text || '').slice(0, 30)}{(msgMenu.text || '').length > 30 ? '...' : ''}
+            </div>
+            <div onClick={() => startEdit(msgMenu)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 20px', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#7C4DFF' }}>
+              <span style={{ fontSize: 18 }}>✏️</span> Edit Message
+            </div>
+            <div style={{ height: 1, background: '#f0f4ff' }} />
+            <div onClick={() => deleteMsg(msgMenu.id)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 20px', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#e53935' }}>
+              <span style={{ fontSize: 18 }}>🗑️</span> Delete Message
+            </div>
+            <div style={{ height: 1, background: '#f0f4ff' }} />
+            <div onClick={() => setMsgMenu(null)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 20px', cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#9ca3af' }}>
+              <span style={{ fontSize: 18 }}>✕</span> Cancel
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="chat-input-bar">
+        {/* Edit indicator */}
+        {editingMsg && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 14px 4px', background: '#ede7ff', borderRadius: '12px 12px 0 0', marginBottom: 2 }}>
+            <span style={{ fontSize: 12, color: '#7C4DFF', fontWeight: 600 }}>✏️ Editing message</span>
+            <span onClick={cancelEdit} style={{ fontSize: 12, color: '#e53935', cursor: 'pointer', fontWeight: 700 }}>✕ Cancel</span>
+          </div>
+        )}
+        {/* Pending image previews */}
+        {pendingImgs.length > 0 && (
+          <div className="img-preview-strip">
+            {pendingImgs.map((src, i) => (
+              <div key={i} className="img-preview-item">
+                <img src={src} />
+                <div className="img-preview-rm" onClick={() => setPendingImgs(p => p.filter((_,j) => j!==i))}>✕</div>
+              </div>
+            ))}
+            {pendingImgs.length < 5 && (
+              <label style={{ width:60, height:60, borderRadius:10, background:'rgba(124,77,255,0.1)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, fontSize:20, border:'2px dashed #7C4DFF' }}>
+                <input type="file" accept="image/*" multiple style={{ display:'none' }} onChange={pickChatImg} />+
+              </label>
+            )}
+          </div>
+        )}
+        <div className="chat-input-row">
+          <div className="chat-inp-wrap">
+            <span className="chat-emoji-btn" onClick={e => { e.stopPropagation(); setShowEmoji(v => !v); }}>
+              {showEmoji ? '😶' : '😊'}
+            </span>
+            <textarea
+              ref={inputRef}
+              className="chat-inp"
+              placeholder="Write a message..."
+              value={text}
+              rows={1}
+              onChange={e => {
+                setText(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
+              }}
+              onKeyDown={handleKey}
+            />
+            <span className="chat-attach-btn">
+              <label style={{ cursor:'pointer', fontSize:19 }}>
+                <input ref={imgInputRef} type="file" accept="image/*" multiple style={{ display:'none' }} onChange={pickChatImg} />
+                📎
+              </label>
+            </span>
+            <span className="chat-attach-btn">
+              <label style={{ cursor:'pointer', fontSize:19 }}>
+                <input type="file" accept="image/*" capture="environment" style={{ display:'none' }} onChange={pickChatImg} />
+                📷
+              </label>
+            </span>
+          </div>
+
+          {(text.trim() || pendingImgs.length > 0) ? (
+            <button className="chat-send-btn" onClick={editingMsg ? saveEdit : sendMsg}>
+              {editingMsg
+                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                  </svg>
+              }
+            </button>
+          ) : (
+            <div className="chat-mic-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ===== SETTINGS PAGE =====
+function SettingsPage({ me, onBack, showToast, lang, setLang }) {
+  const { t } = useLang();
+  const [section, setSection] = useState('main');
+  const [notifToggles, setNotifToggles] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('tc_notif') || '{"msg":true,"friend":true,"post":false}'); } catch { return { msg:true, friend:true, post:false }; }
+  });
+  const [fontSize, setFontSize] = useState(localStorage.getItem('tc_fontsize') || 'medium');
+  const [privacySettings, setPrivacySettings] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('tc_privacy') || '{"profileVisible":"everyone","onlineStatus":true,"readReceipts":true,"allowMessages":"everyone","showPhone":false,"showEmail":false}'); }
+    catch { return { profileVisible:'everyone', onlineStatus:true, readReceipts:true, allowMessages:'everyone', showPhone:false, showEmail:false }; }
+  });
+  const [reportText, setReportText] = useState('');
+  const [reportSending, setReportSending] = useState(false);
+  const [changePwForm, setChangePwForm] = useState({ current:'', next:'', confirm:'' });
+  const [pwChanging, setPwChanging] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState('');
+
+  const savePrivacy = (key, val) => {
+    const updated = { ...privacySettings, [key]: val };
+    setPrivacySettings(updated);
+    localStorage.setItem('tc_privacy', JSON.stringify(updated));
+    db.collection('users').doc(me.uid).update({ privacy: updated }).catch(() => {});
+  };
+
+  const saveNotif = (key, val) => {
+    const updated = { ...notifToggles, [key]: val };
+    setNotifToggles(updated);
+    localStorage.setItem('tc_notif', JSON.stringify(updated));
+  };
+
+  const applyFontSize = (size) => {
+    setFontSize(size);
+    localStorage.setItem('tc_fontsize', size);
+    const map = { small: '13px', medium: '15px', large: '17px' };
+    document.documentElement.style.setProperty('--base-font', map[size]);
+  };
+
+  const sendReport = async () => {
+    if (!reportText.trim()) { showToast('❌ Please describe the issue'); return; }
+    setReportSending(true);
+    await db.collection('reports').add({ uid: me.uid, name: me.name, text: reportText.trim(), createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    setReportText('');
+    setReportSending(false);
+    showToast('✅ Report sent. Thank you!');
+  };
+
+  const changePassword = async () => {
+    if (!changePwForm.current) { showToast('❌ Enter current password'); return; }
+    if (changePwForm.next.length < 6) { showToast('❌ New password must be 6+ chars'); return; }
+    if (changePwForm.next !== changePwForm.confirm) { showToast('❌ Passwords do not match'); return; }
+    setPwChanging(true);
+    try {
+      const cred = firebase.auth.EmailAuthProvider.credential(me.email || auth.currentUser.email, changePwForm.current);
+      await auth.currentUser.reauthenticateWithCredential(cred);
+      await auth.currentUser.updatePassword(changePwForm.next);
+      setChangePwForm({ current:'', next:'', confirm:'' });
+      showToast('✅ Password changed!');
+      setSection('account');
+    } catch(e) {
+      showToast('❌ ' + (e.message || 'Failed'));
+    }
+    setPwChanging(false);
+  };
+
+  const deleteAccount = async () => {
+    if (deleteConfirm !== 'DELETE') { showToast('❌ Type DELETE to confirm'); return; }
+    try {
+      await db.collection('users').doc(me.uid).delete();
+      await auth.currentUser.delete();
+      showToast('Account deleted');
+    } catch(e) { showToast('❌ ' + (e.message || 'Failed. Please re-login first.')); }
+  };
+
+  // ── shared sub-components ──
+  const SectionHeader = ({ title, back }) => (
+    <div style={{ display:'flex', alignItems:'center', gap:12, padding:'14px 16px 10px', background:'#fff', borderBottom:'1px solid #f0f4ff', position:'sticky', top:0, zIndex:10 }}>
+      <div onClick={() => back ? back() : (section === 'main' ? onBack() : setSection('main'))} style={{ width:36, height:36, borderRadius:12, background:'#f0f4ff', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:18 }}>←</div>
+      <span style={{ fontWeight:800, fontSize:16, color:'#1a1a2e' }}>{title}</span>
+    </div>
+  );
+
+  const MenuItem = ({ icon, label, sub, onClick, right, danger }) => (
+    <div onClick={onClick} style={{ display:'flex', alignItems:'center', gap:14, padding:'15px 18px', background:'#fff', borderBottom:'1px solid #f8f9ff', cursor:'pointer' }}
+      onTouchStart={e => e.currentTarget.style.background='#f8f9ff'} onTouchEnd={e => e.currentTarget.style.background='#fff'}>
+      <div style={{ width:40, height:40, borderRadius:12, background: danger ? '#fff0f0' : '#f0f4ff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0 }}>{icon}</div>
+      <div style={{ flex:1 }}>
+        <div style={{ fontSize:14, fontWeight:600, color: danger ? '#e53935' : '#1a1a2e' }}>{label}</div>
+        {sub && <div style={{ fontSize:12, color:'#9ca3af', marginTop:2 }}>{sub}</div>}
+      </div>
+      {right !== undefined ? right : <span style={{ color:'#c4c8d8', fontSize:18 }}>›</span>}
+    </div>
+  );
+
+  const Toggle = ({ value, onChange }) => (
+    <div onClick={() => onChange(!value)} style={{ width:44, height:24, borderRadius:12, background: value ? '#7C4DFF' : '#d1d5db', position:'relative', cursor:'pointer', transition:'background .2s', flexShrink:0 }}>
+      <div style={{ position:'absolute', top:3, left: value ? 23 : 3, width:18, height:18, borderRadius:'50%', background:'#fff', transition:'left .2s', boxShadow:'0 1px 4px rgba(0,0,0,0.2)' }} />
+    </div>
+  );
+
+  const RadioGroup = ({ options, value, onChange }) => (
+    <div style={{ display:'flex', flexDirection:'column', gap:0 }}>
+      {options.map(([val, label]) => (
+        <div key={val} onClick={() => onChange(val)} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'13px 18px', borderBottom:'1px solid #f8f9ff', cursor:'pointer', background:'#fff' }}>
+          <span style={{ fontSize:14, fontWeight:500, color:'#1a1a2e' }}>{label}</span>
+          <div style={{ width:20, height:20, borderRadius:'50%', border: value===val ? 'none' : '2px solid #d1d5db', background: value===val ? 'linear-gradient(135deg,#7C4DFF,#ff6b9d)' : 'transparent', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            {value===val && <div style={{ width:8, height:8, borderRadius:'50%', background:'#fff' }} />}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const PwInput = ({ label, field }) => (
+    <div style={{ marginBottom:12 }}>
+      <div style={{ fontSize:12, fontWeight:600, color:'#6b7280', marginBottom:5 }}>{label}</div>
+      <input className="inp" type="password" value={changePwForm[field]} onChange={e => setChangePwForm(p => ({ ...p, [field]: e.target.value }))} autoComplete="off" autoCorrect="off" />
+    </div>
+  );
+
+  // ── LANGUAGE ──
+  if (section === 'language') return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:40 }}>
+      <SectionHeader title={t.langTitle} />
+      <div style={{ padding:'8px 0' }}>
+        <div style={{ padding:'10px 18px 6px', fontSize:12, fontWeight:700, color:'#9ca3af', textTransform:'uppercase', letterSpacing:0.5 }}>{t.langSubtitle}</div>
+        {Object.values(LANGS).map(l => (
+          <div key={l.code} onClick={() => { setLang(l.code); showToast(`✅ ${l.name}`); }} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px', background:'#fff', borderBottom:'1px solid #f8f9ff', cursor:'pointer' }}>
+            <div style={{ fontSize:28, width:44, textAlign:'center' }}>{l.flag}</div>
+            <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:700, color:'#1a1a2e' }}>{l.name}</div></div>
+            {lang === l.code && <div style={{ width:22, height:22, borderRadius:'50%', background:'linear-gradient(135deg,#7C4DFF,#ff6b9d)', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:13, fontWeight:700 }}>✓</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ── APPEARANCE ──
+  if (section === 'appearance') return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:40 }}>
+      <SectionHeader title={t.appearance} />
+      <div style={{ padding:'12px 0' }}>
+        <div style={{ padding:'10px 18px 6px', fontSize:12, fontWeight:700, color:'#9ca3af', textTransform:'uppercase', letterSpacing:0.5 }}>{t.fontSize}</div>
+        <div style={{ background:'#fff', margin:'0 0 8px', padding:'14px 18px', display:'flex', gap:10 }}>
+          {[['small', t.fontSmall,'13px'],['medium', t.fontMedium,'15px'],['large', t.fontLarge,'17px']].map(([key, label, sz]) => (
+            <div key={key} onClick={() => applyFontSize(key)} style={{ flex:1, textAlign:'center', padding:'10px 6px', borderRadius:12, fontSize:sz, fontWeight:600, cursor:'pointer', background: fontSize===key ? 'linear-gradient(135deg,#7C4DFF,#9c6fff)' : '#f0f4ff', color: fontSize===key ? '#fff' : '#6b7280', border: fontSize===key ? '2px solid #7C4DFF' : '2px solid #e8eaf6' }}>
+              {label}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── NOTIFICATION SETTINGS ──
+  if (section === 'notifSettings') return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:40 }}>
+      <SectionHeader title={t.notifSettings} />
+      <div style={{ background:'#fff', margin:'12px 0 0' }}>
+        {[['msg', t.msgNotif,'💬','Get notified for new messages'],['friend', t.friendNotif,'👥','When someone sends a friend request'],['post', t.postNotif,'📝','When friends make new posts']].map(([key, label, icon, sub]) => (
+          <div key={key} style={{ display:'flex', alignItems:'center', gap:14, padding:'15px 18px', borderBottom:'1px solid #f8f9ff' }}>
+            <div style={{ width:40, height:40, borderRadius:12, background:'#f0f4ff', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>{icon}</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:14, fontWeight:600, color:'#1a1a2e' }}>{label}</div>
+              <div style={{ fontSize:11, color:'#9ca3af', marginTop:2 }}>{sub}</div>
+            </div>
+            <Toggle value={notifToggles[key]} onChange={v => saveNotif(key, v)} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ── PRIVACY ──
+  if (section === 'privacy') return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:40 }}>
+      <SectionHeader title={t.privacy} />
+
+      <div style={{ padding:'10px 18px 4px', fontSize:12, fontWeight:700, color:'#9ca3af', textTransform:'uppercase', letterSpacing:0.5, marginTop:10 }}>Profile Visibility</div>
+      <RadioGroup options={[['everyone','🌍 Everyone'],['friends','👥 Friends Only'],['only_me','🔒 Only Me']]} value={privacySettings.profileVisible} onChange={v => savePrivacy('profileVisible', v)} />
+
+      <div style={{ padding:'10px 18px 4px', fontSize:12, fontWeight:700, color:'#9ca3af', textTransform:'uppercase', letterSpacing:0.5, marginTop:8 }}>Who Can Message You</div>
+      <RadioGroup options={[['everyone','🌍 Everyone'],['friends','👥 Friends Only']]} value={privacySettings.allowMessages} onChange={v => savePrivacy('allowMessages', v)} />
+
+      <div style={{ background:'#fff', margin:'8px 0 0' }}>
+        {[
+          ['onlineStatus', '🟢 Show Online Status', 'Others can see when you\'re active'],
+          ['readReceipts', '✓✓ Read Receipts', 'Show when you\'ve read messages'],
+          ['showPhone', '📞 Show Phone Number', 'Visible to friends'],
+          ['showEmail', '✉️ Show Email', 'Visible to friends'],
+        ].map(([key, label, sub]) => (
+          <div key={key} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px', borderBottom:'1px solid #f8f9ff' }}>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:14, fontWeight:600, color:'#1a1a2e' }}>{label}</div>
+              <div style={{ fontSize:11, color:'#9ca3af', marginTop:2 }}>{sub}</div>
+            </div>
+            <Toggle value={privacySettings[key]} onChange={v => savePrivacy(key, v)} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ── ACCOUNT ──
+  if (section === 'account') return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:40 }}>
+      <SectionHeader title={t.account} />
+      <div style={{ background:'#fff', margin:'12px 0 8px' }}>
+        <div style={{ padding:'14px 18px', borderBottom:'1px solid #f8f9ff' }}>
+          <div style={{ fontSize:12, color:'#9ca3af', fontWeight:600, marginBottom:3 }}>Email</div>
+          <div style={{ fontSize:14, fontWeight:600, color:'#1a1a2e' }}>{me?.email || auth.currentUser?.email || '—'}</div>
+        </div>
+        <div style={{ padding:'14px 18px', borderBottom:'1px solid #f8f9ff' }}>
+          <div style={{ fontSize:12, color:'#9ca3af', fontWeight:600, marginBottom:3 }}>Member since</div>
+          <div style={{ fontSize:14, fontWeight:600, color:'#1a1a2e' }}>{auth.currentUser?.metadata?.creationTime ? new Date(auth.currentUser.metadata.creationTime).toLocaleDateString() : '—'}</div>
+        </div>
+      </div>
+      <div style={{ background:'#fff', marginBottom:8 }}>
+        <MenuItem icon="🔑" label={t.changePassword} onClick={() => setSection('changePassword')} />
+        <MenuItem icon="🚪" label={t.logout} danger onClick={() => auth.signOut()} right={<span/>} />
+      </div>
+      <div style={{ background:'#fff' }}>
+        <MenuItem icon="🗑️" label={t.deleteAccount} danger onClick={() => setSection('deleteAccount')} />
+      </div>
+    </div>
+  );
+
+  // ── CHANGE PASSWORD ──
+  if (section === 'changePassword') return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:40 }}>
+      <SectionHeader title={t.changePassword} back={() => setSection('account')} />
+      <div style={{ padding:'20px 18px' }}>
+        <PwInput label="Current Password" field="current" />
+        <PwInput label="New Password" field="next" />
+        <PwInput label="Confirm New Password" field="confirm" />
+        <button onClick={changePassword} disabled={pwChanging} style={{ width:'100%', marginTop:8, background:'linear-gradient(135deg,#7C4DFF,#ff6b9d)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontFamily:'Poppins', fontWeight:700, fontSize:14, cursor:'pointer', opacity: pwChanging ? 0.7 : 1 }}>
+          {pwChanging ? 'Changing...' : '🔑 Change Password'}
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── DELETE ACCOUNT ──
+  if (section === 'deleteAccount') return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:40 }}>
+      <SectionHeader title="Delete Account" back={() => setSection('account')} />
+      <div style={{ padding:'24px 18px' }}>
+        <div style={{ background:'#fff0f0', border:'1.5px solid #ffcdd2', borderRadius:16, padding:'16px', marginBottom:20 }}>
+          <div style={{ fontWeight:700, color:'#c62828', fontSize:14, marginBottom:6 }}>⚠️ This action cannot be undone</div>
+          <div style={{ fontSize:13, color:'#b71c1c', lineHeight:1.5 }}>All your posts, messages, and profile data will be permanently deleted.</div>
+        </div>
+        <div style={{ fontSize:13, color:'#6b7280', marginBottom:8, fontWeight:600 }}>Type <strong>DELETE</strong> to confirm:</div>
+        <input className="inp" value={deleteConfirm} onChange={e => setDeleteConfirm(e.target.value)} placeholder="DELETE" autoComplete="off" style={{ marginBottom:16 }} />
+        <button onClick={deleteAccount} style={{ width:'100%', background: deleteConfirm === 'DELETE' ? '#e53935' : '#ffcdd2', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontFamily:'Poppins', fontWeight:700, fontSize:14, cursor: deleteConfirm === 'DELETE' ? 'pointer' : 'not-allowed' }}>
+          🗑️ Delete My Account
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── PRIVACY POLICY ──
+  if (section === 'privacyPolicy') return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:40 }}>
+      <SectionHeader title="🔒 Privacy Policy" back={() => setSection('about')} />
+      <div style={{ padding:'20px 18px', fontSize:13, color:'#374151', lineHeight:1.8 }}>
+        {[
+          ['What We Collect', 'We collect your name, email, profile photo, and content you share (posts, messages, stories). We do not sell your data to third parties.'],
+          ['How We Use It', 'Your data is used to provide the Twin Chat service — showing your profile, delivering messages, and displaying posts to your friends.'],
+          ['Data Storage', 'All data is stored securely using Firebase (Google Cloud). Messages are stored in Firestore and are not read by our team.'],
+          ['Your Control', 'You can edit or delete your profile, posts, and messages at any time. You can also delete your account, which permanently removes all your data.'],
+          ['Cookies', 'We use localStorage to remember your language and appearance preferences. No third-party tracking cookies are used.'],
+          ['Contact', 'For any privacy concerns, contact us at: privacy@twinchat.app'],
+        ].map(([title, body]) => (
+          <div key={title} style={{ marginBottom:20 }}>
+            <div style={{ fontWeight:700, fontSize:14, color:'#1a1a2e', marginBottom:6 }}>{title}</div>
+            <div style={{ background:'#fff', borderRadius:12, padding:'12px 14px', fontSize:13, color:'#6b7280', lineHeight:1.7 }}>{body}</div>
+          </div>
+        ))}
+        <div style={{ fontSize:11, color:'#9ca3af', textAlign:'center', marginTop:10 }}>Last updated: January 2025</div>
+      </div>
+    </div>
+  );
+
+  // ── TERMS OF SERVICE ──
+  if (section === 'terms') return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:40 }}>
+      <SectionHeader title="📄 Terms of Service" back={() => setSection('about')} />
+      <div style={{ padding:'20px 18px', fontSize:13, color:'#374151', lineHeight:1.8 }}>
+        {[
+          ['Acceptance', 'By using Twin Chat, you agree to these Terms of Service. If you do not agree, please do not use the app.'],
+          ['Eligibility', 'You must be at least 13 years old to use Twin Chat. By registering, you confirm that you meet this requirement.'],
+          ['Your Content', 'You own the content you post. By posting, you grant Twin Chat a license to display that content to other users as part of the service.'],
+          ['Prohibited Conduct', 'You may not use Twin Chat to harass others, post illegal content, spam, impersonate others, or attempt to hack the service.'],
+          ['Account Termination', 'We reserve the right to suspend or delete accounts that violate these terms.'],
+          ['Limitation of Liability', 'Twin Chat is provided "as is" without warranties. We are not liable for any damages arising from your use of the service.'],
+          ['Changes', 'We may update these terms from time to time. Continued use of the app means you accept any changes.'],
+          ['Contact', 'Questions? Reach us at: legal@twinchat.app'],
+        ].map(([title, body]) => (
+          <div key={title} style={{ marginBottom:20 }}>
+            <div style={{ fontWeight:700, fontSize:14, color:'#1a1a2e', marginBottom:6 }}>{title}</div>
+            <div style={{ background:'#fff', borderRadius:12, padding:'12px 14px', fontSize:13, color:'#6b7280', lineHeight:1.7 }}>{body}</div>
+          </div>
+        ))}
+        <div style={{ fontSize:11, color:'#9ca3af', textAlign:'center', marginTop:10 }}>Last updated: January 2025</div>
+      </div>
+    </div>
+  );
+
+  // ── REPORT A BUG ──
+  if (section === 'report') return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:40 }}>
+      <SectionHeader title="🐞 Report a Bug" back={() => setSection('about')} />
+      <div style={{ padding:'20px 18px' }}>
+        <div style={{ fontSize:13, color:'#6b7280', marginBottom:14, lineHeight:1.6 }}>Found something broken? Describe the issue below and we'll fix it as soon as possible.</div>
+        <textarea className="inp" rows={6} placeholder="Describe the bug or issue in detail..." value={reportText} onChange={e => setReportText(e.target.value)} style={{ resize:'none', marginBottom:14 }} />
+        <button onClick={sendReport} disabled={reportSending} style={{ width:'100%', background:'linear-gradient(135deg,#7C4DFF,#ff6b9d)', border:'none', borderRadius:14, padding:'14px', color:'#fff', fontFamily:'Poppins', fontWeight:700, fontSize:14, cursor:'pointer', opacity: reportSending ? 0.7 : 1 }}>
+          {reportSending ? 'Sending...' : '📤 Send Report'}
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── ABOUT ──
+  if (section === 'about') return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:40 }}>
+      <SectionHeader title={t.about} />
+      <div style={{ textAlign:'center', padding:'36px 24px 24px' }}>
+        <div style={{ display:'flex', justifyContent:'center', marginBottom:4 }}>
+          <TwinLogo size={60} showText={false} />
+        </div>
+        <div style={{ fontWeight:800, fontSize:22, background:'linear-gradient(135deg,#7C4DFF,#ff6b9d)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', marginBottom:4 }}>Twin Chat</div>
+        <div style={{ fontSize:12, color:'#9ca3af', marginBottom:4 }}>{t.version} 1.0.0</div>
+        <div style={{ fontSize:13, color:'#6b7280', lineHeight:1.6, maxWidth:280, margin:'12px auto 0' }}>{t.twinChatAbout}</div>
+      </div>
+      <div style={{ background:'#fff', margin:'0 0 8px' }}>
+        <MenuItem icon="🔒" label="Privacy Policy" onClick={() => setSection('privacyPolicy')} />
+        <MenuItem icon="📄" label="Terms of Service" onClick={() => setSection('terms')} />
+        <MenuItem icon="🐞" label="Report a Bug" onClick={() => setSection('report')} />
+      </div>
+    </div>
+  );
+
+  // ── MAIN ──
+  return (
+    <div style={{ minHeight:'100vh', background:'#f8f9ff', paddingBottom:80 }}>
+      <SectionHeader title={t.settings} />
+      <div style={{ background:'#fff', margin:'10px 0 8px', padding:'16px 18px', display:'flex', alignItems:'center', gap:14 }}>
+        <div style={{ width:52, height:52, borderRadius:'50%', background:'linear-gradient(135deg,#7C4DFF,#ff6b9d)', overflow:'hidden', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontWeight:800, fontSize:20 }}>
+          {me?.photoURL ? <img src={me.photoURL} style={{ width:'100%', height:'100%', objectFit:'cover' }} /> : (me?.name||'?')[0]}
+        </div>
+        <div>
+          <div style={{ fontWeight:700, fontSize:15, color:'#1a1a2e' }}>{me?.name}</div>
+          <div style={{ fontSize:12, color:'#9ca3af' }}>{me?.username || me?.email || ''}</div>
+        </div>
+      </div>
+      <div style={{ background:'#fff', marginBottom:8 }}>
+        <MenuItem icon="🌐" label={t.language} sub={LANGS[lang]?.name + ' ' + LANGS[lang]?.flag} onClick={() => setSection('language')} />
+        <MenuItem icon="🎨" label={t.appearance} sub={t.fontSize} onClick={() => setSection('appearance')} />
+        <MenuItem icon="🔔" label={t.notifSettings} onClick={() => setSection('notifSettings')} />
+      </div>
+      <div style={{ background:'#fff', marginBottom:8 }}>
+        <MenuItem icon="🔒" label={t.privacy} onClick={() => setSection('privacy')} />
+        <MenuItem icon="👤" label={t.account} onClick={() => setSection('account')} />
+      </div>
+      <div style={{ background:'#fff', marginBottom:8 }}>
+        <MenuItem icon="ℹ️" label={t.about} onClick={() => setSection('about')} />
+      </div>
+      <div style={{ background:'#fff' }}>
+        <MenuItem icon="🚪" label={t.logout} danger onClick={() => auth.signOut()} right={<span/>} />
+      </div>
+    </div>
+  );
+}
+
+// ===== NOTIFICATION PAGE =====
+function NotifPage({ me, showToast, onViewProfile, onChatOpen }) {
+  const [notifs, setNotifs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!me?.uid) return;
+    // Listen to user doc for friendRequests + notifications sub-collection
+    const unsubUser = db.collection('users').doc(me.uid).onSnapshot(snap => {
+      if (!snap.exists) return;
+      const d = snap.data();
+      const reqs = (d.friendRequests || []);
+      // Build notif items from friendRequests
+      Promise.all(reqs.map(uid =>
+        db.collection('users').doc(uid).get().then(s => s.exists ? ({ type: 'friend_req', uid, name: s.data().name, photo: s.data().photoURL, userData: s.data() }) : null)
+      )).then(items => {
+        const reqNotifs = items.filter(Boolean).map(i => ({ ...i, id: 'req_' + i.uid, time: null }));
+        setNotifs(reqNotifs);
+        setLoading(false);
+      });
+    });
+    return () => unsubUser();
+  }, [me?.uid]);
+
+  const accept = async (item) => {
+    const batch = db.batch();
+    batch.update(db.collection('users').doc(me.uid), {
+      friends: firebase.firestore.FieldValue.arrayUnion(item.uid),
+      friendRequests: firebase.firestore.FieldValue.arrayRemove(item.uid),
+    });
+    batch.update(db.collection('users').doc(item.uid), {
+      friends: firebase.firestore.FieldValue.arrayUnion(me.uid),
+      sentRequests: firebase.firestore.FieldValue.arrayRemove(me.uid),
+    });
+    await batch.commit();
+    showToast('✅ Friend request accepted!');
+  };
+
+  const decline = async (item) => {
+    await db.collection('users').doc(me.uid).update({
+      friendRequests: firebase.firestore.FieldValue.arrayRemove(item.uid),
+    });
+    await db.collection('users').doc(item.uid).update({
+      sentRequests: firebase.firestore.FieldValue.arrayRemove(me.uid),
+    });
+    showToast('❌ Request declined');
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f8f9ff', paddingBottom: 80 }}>
+      {/* Header */}
+      <div style={{ background: '#fff', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid #e8eaf6', position: 'sticky', top: 0, zIndex: 10 }}>
+        <span style={{ fontSize: 17, fontWeight: 800, background: 'linear-gradient(135deg,#7C4DFF,#ff6b9d)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>🔔 Notifications</span>
+        {notifs.length > 0 && (
+          <div style={{ marginLeft: 'auto', background: '#7C4DFF', color: '#fff', borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700 }}>{notifs.length} new</div>
+        )}
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: 60, color: '#9ca3af', fontSize: 14 }}>Loading...</div>
+      ) : notifs.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '80px 24px' }}>
+          <div style={{ fontSize: 56, marginBottom: 14 }}>🔔</div>
+          <div style={{ fontWeight: 700, fontSize: 16, color: '#374151', marginBottom: 8 }}>No notifications yet</div>
+          <div style={{ fontSize: 13, color: '#9ca3af' }}>Friend requests and activity will show up here</div>
+        </div>
+      ) : (
+        <div>
+          {/* Friend Requests Section */}
+          {notifs.some(n => n.type === 'friend_req') && (
+            <div>
+              <div style={{ padding: '14px 16px 8px', fontSize: 12, fontWeight: 700, color: '#7C4DFF', background: '#f8f9ff', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                👥 Friend Requests
+              </div>
+              {notifs.filter(n => n.type === 'friend_req').map(item => (
+                <div key={item.id} className="notif-item unread">
+                  <div className="notif-icon-wrap" onClick={() => onViewProfile && onViewProfile(item.userData)} style={{ cursor: 'pointer' }}>
+                    {item.photo
+                      ? <img src={item.photo} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                      : <span style={{ color: '#fff', fontWeight: 700, fontSize: 18 }}>{(item.name || '?')[0]}</span>
+                    }
+                  </div>
+                  <div className="notif-text">
+                    <strong>{item.name}</strong> sent you a friend request
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <button onClick={() => accept(item)} style={{ flex: 1, background: 'linear-gradient(135deg,#7C4DFF,#9c6fff)', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 0', fontFamily: 'Poppins', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                        ✅ Accept
+                      </button>
+                      <button onClick={() => decline(item)} style={{ flex: 1, background: '#f0f4ff', color: '#6b7280', border: '1.5px solid #e8eaf6', borderRadius: 10, padding: '8px 0', fontFamily: 'Poppins', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>
+                        ✕ Decline
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ===== FRIENDS PAGE =====
+function FriendsPage({ me, showToast, onChatOpen }) {
+  const [activeTab, setActiveTab] = useState('friends');
+  const [friends, setFriends] = useState([]);
+  const [requests, setRequests] = useState([]);
+
+  useEffect(() => {
+    if (!me) return;
+    const fids = me.friends || [];
+    const rids = me.friendRequests || [];
+    if (fids.length) Promise.all(fids.map(uid => db.collection('users').doc(uid).get())).then(snaps => setFriends(snaps.map(s => s.data()).filter(Boolean)));
+    else setFriends([]);
+    if (rids.length) Promise.all(rids.map(uid => db.collection('users').doc(uid).get())).then(snaps => setRequests(snaps.map(s => s.data()).filter(Boolean)));
+    else setRequests([]);
+  }, [me]);
+
+  const acceptRequest = async (user) => {
+    const batch = db.batch();
+    batch.update(db.collection('users').doc(me.uid), {
+      friends: firebase.firestore.FieldValue.arrayUnion(user.uid),
+      friendRequests: firebase.firestore.FieldValue.arrayRemove(user.uid)
+    });
+    batch.update(db.collection('users').doc(user.uid), {
+      friends: firebase.firestore.FieldValue.arrayUnion(me.uid),
+      sentRequests: firebase.firestore.FieldValue.arrayRemove(me.uid)
+    });
+    await batch.commit();
+    showToast(`✅ Now friends with ${user.name}!`);
+  };
+
+  const declineRequest = async (user) => {
+    const batch = db.batch();
+    batch.update(db.collection('users').doc(me.uid), { friendRequests: firebase.firestore.FieldValue.arrayRemove(user.uid) });
+    batch.update(db.collection('users').doc(user.uid), { sentRequests: firebase.firestore.FieldValue.arrayRemove(me.uid) });
+    await batch.commit();
+    showToast('Request declined');
+  };
+
+  return (
+    <div>
+      <div className="topbar"><span className="topbar-logo">Friends</span></div>
+      <div className="friends-tabs">
+        <div className={`friends-tab ${activeTab === 'friends' ? 'active' : ''}`} onClick={() => setActiveTab('friends')}>Friends ({friends.length})</div>
+        <div className={`friends-tab ${activeTab === 'requests' ? 'active' : ''}`} onClick={() => setActiveTab('requests')}>
+          Requests {requests.length > 0 && <span style={{ background: '#7C4DFF', color: '#fff', borderRadius: 10, padding: '1px 7px', fontSize: 11, marginLeft: 4 }}>{requests.length}</span>}
+        </div>
+      </div>
+      <div className="page-content">
+        {activeTab === 'friends' && (
+          friends.length === 0 ? <div className="empty-state"><div className="emoji">👥</div><p>No friends yet. Search and add people!</p></div>
+            : friends.map(f => (
+              <div key={f.uid} className="friend-item">
+                <Avatar user={f} size={48} />
+                <div className="friend-info">
+                  <div className="friend-name">{f.name}</div>
+                  <div className="friend-sub">{(f.friends || []).length} mutual friends</div>
+                </div>
+                <button className="btn-chat-small" onClick={() => onChatOpen(f)}>💬 Chat</button>
+              </div>
+            ))
+        )}
+        {activeTab === 'requests' && (
+          requests.length === 0 ? <div className="empty-state"><div className="emoji">📬</div><p>No pending friend requests</p></div>
+            : requests.map(user => (
+              <div key={user.uid} className="friend-item">
+                <Avatar user={user} size={48} />
+                <div className="friend-info">
+                  <div className="friend-name">{user.name}</div>
+                  <div className="friend-sub">Wants to be your friend</div>
+                </div>
+                <div>
+                  <button className="btn-accept" onClick={() => acceptRequest(user)}>✓ Accept</button>
+                  <button className="btn-decline" onClick={() => declineRequest(user)}>✕</button>
+                </div>
+              </div>
+            ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ===== FIELD COMPONENTS — outside EditProfilePage to prevent remount on re-render =====
+function ProfileField({ label, placeholder, value, onChange, inputMode, rows }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>{label}</label>
+      {rows ? (
+        <textarea
+          className="inp"
+          rows={rows}
+          placeholder={placeholder}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          style={{ resize: 'none' }}
+        />
+      ) : (
+        <input
+          className="inp"
+          type="text"
+          inputMode={inputMode || 'text'}
+          placeholder={placeholder}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck="false"
+        />
+      )}
+    </div>
+  );
+}
+
+function ProfilePrivacySelect({ label, value, onChange }) {
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>{label}</label>
+      <div style={{ display: 'flex', gap: 8 }}>
+        {[['public', '🌍 Public'], ['friends', '👥 Friends'], ['only_me', '🔒 Only Me']].map(([val, lbl]) => (
+          <div key={val} onClick={() => onChange(val)} style={{
+            flex: 1, textAlign: 'center', padding: '9px 6px', borderRadius: 12, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            background: value === val ? 'linear-gradient(135deg,#7C4DFF,#9c6fff)' : '#f0f4ff',
+            color: value === val ? '#fff' : '#6b7280',
+            border: value === val ? '2px solid #7C4DFF' : '2px solid #e8eaf6',
+            transition: 'all .2s'
+          }}>{lbl}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ===== EDIT PROFILE FULL PAGE =====
+function EditProfilePage({ me, onBack, showToast }) {
+  const [activeSection, setActiveSection] = useState('basic');
+  const [saving, setSaving] = useState(false);
+  const [imgLoading, setImgLoading] = useState({ avatar: false, cover: false });
+
+  // Form state
+  const [form, setForm] = useState({
+    name: me?.name || '',
+    username: me?.username || '',
+    bio: me?.bio || '',
+    relationship: me?.relationship || '',
+    job: me?.job || '',
+    education: me?.education || '',
+    dob: me?.dob || '',
+    phone: me?.phone || '',
+    email: me?.email || '',
+    city: me?.city || '',
+    hometown: me?.hometown || '',
+    company: me?.company || '',
+    school: me?.school || '',
+    university: me?.university || '',
+    hobbies: me?.hobbies || '',
+    favMusic: me?.favMusic || '',
+    favMovie: me?.favMovie || '',
+    favBook: me?.favBook || '',
+    whatsapp: me?.whatsapp || '',
+    instagram: me?.instagram || '',
+    privacyPosts: me?.privacyPosts || 'friends',
+    privacyFriends: me?.privacyFriends || 'public',
+    photoURL: me?.photoURL || '',
+    coverURL: me?.coverURL || '',
+  });
+
+  const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }));
+
+  // Shorthand aliases pointing to outside components
+  const Field = ProfileField;
+  const PrivacySelect = ProfilePrivacySelect;
+  const handleImgUpload = (type, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImgLoading(prev => ({ ...prev, [type]: true }));
+    const reader = new FileReader();
+    reader.onload = ev => {
+      // compress
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxW = type === 'cover' ? 800 : 300;
+        const ratio = Math.min(maxW / img.width, 1);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        const b64 = canvas.toDataURL('image/jpeg', 0.7);
+        set(type === 'cover' ? 'coverURL' : 'photoURL', b64);
+        setImgLoading(prev => ({ ...prev, [type]: false }));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const save = async () => {
+    if (!form.name.trim()) { showToast('❌ Name cannot be empty'); return; }
+    setSaving(true);
+    try {
+      await db.collection('users').doc(me.uid).update({
+        name: form.name.trim(),
+        username: form.username.trim(),
+        bio: form.bio.trim(),
+        relationship: form.relationship,
+        job: form.job.trim(),
+        education: form.education.trim(),
+        dob: form.dob,
+        phone: form.phone.trim(),
+        email: form.email.trim(),
+        city: form.city.trim(),
+        hometown: form.hometown.trim(),
+        company: form.company.trim(),
+        school: form.school.trim(),
+        university: form.university.trim(),
+        hobbies: form.hobbies.trim(),
+        favMusic: form.favMusic.trim(),
+        favMovie: form.favMovie.trim(),
+        favBook: form.favBook.trim(),
+        whatsapp: form.whatsapp.trim(),
+        instagram: form.instagram.trim(),
+        privacyPosts: form.privacyPosts,
+        privacyFriends: form.privacyFriends,
+        photoURL: form.photoURL,
+        coverURL: form.coverURL,
+      });
+      showToast('✅ Profile saved successfully!');
+      onBack();
+    } catch(e) { showToast('❌ Save failed: ' + e.message); }
+    setSaving(false);
+  };
+
+  const sections = [
+    { id: 'basic', label: 'Basic Info', emoji: '👤' },
+    { id: 'personal', label: 'Personal', emoji: '📋' },
+    { id: 'work', label: 'Work & Edu', emoji: '🎓' },
+    { id: 'interests', label: 'Interests', emoji: '🎵' },
+    { id: 'contact', label: 'Contact', emoji: '📞' },
+    { id: 'privacy', label: 'Privacy', emoji: '🔒' },
+  ];
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f8f9ff' }}>
+      {/* Header */}
+      <div style={{ background: '#fff', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid #e8eaf6', position: 'sticky', top: 0, zIndex: 100 }}>
+        <div onClick={onBack} style={{ cursor: 'pointer', width: 36, height: 36, borderRadius: 10, background: '#f0f4ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="back" size={20} color="#6b7280" />
+        </div>
+        <span style={{ flex: 1, fontSize: 17, fontWeight: 800, background: 'linear-gradient(135deg,#7C4DFF,#ff6b9d)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Edit Profile</span>
+        <button onClick={save} disabled={saving} style={{ background: 'linear-gradient(135deg,#7C4DFF,#9c6fff)', color: '#fff', border: 'none', borderRadius: 12, padding: '9px 20px', fontFamily: 'Poppins', fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving ? 0.7 : 1 }}>
+          {saving ? 'Saving...' : '💾 Save'}
+        </button>
+      </div>
+
+      {/* Cover & Avatar */}
+      <div style={{ position: 'relative', marginBottom: 50 }}>
+        {/* Cover Photo */}
+        <label style={{ cursor: 'pointer', display: 'block' }}>
+          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleImgUpload('cover', e)} />
+          <div style={{ width: '100%', height: 160, background: form.coverURL ? 'none' : 'linear-gradient(135deg,#ede7ff,#fce4ec)', position: 'relative', overflow: 'hidden' }}>
+            {form.coverURL
+              ? <img src={form.coverURL} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 6 }}>
+                  <span style={{ fontSize: 32 }}>🖼️</span>
+                  <span style={{ fontSize: 12, color: '#9ca3af', fontWeight: 600 }}>Tap to add cover photo</span>
+                </div>
+            }
+            <div style={{ position: 'absolute', bottom: 10, right: 10, background: 'rgba(0,0,0,0.5)', borderRadius: 10, padding: '6px 12px', color: '#fff', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+              📷 {imgLoading.cover ? 'Loading...' : 'Change Cover'}
+            </div>
+          </div>
+        </label>
+
+        {/* Profile Avatar */}
+        <label style={{ cursor: 'pointer', position: 'absolute', bottom: -42, left: '50%', transform: 'translateX(-50%)', display: 'block' }}>
+          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleImgUpload('avatar', e)} />
+          <div style={{ width: 84, height: 84, borderRadius: '50%', border: '4px solid #fff', overflow: 'hidden', background: 'linear-gradient(135deg,#7C4DFF,#ff6b9d)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(124,77,255,0.3)', position: 'relative' }}>
+            {form.photoURL
+              ? <img src={form.photoURL} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <span style={{ fontSize: 32, color: '#fff', fontWeight: 700 }}>{(form.name || me?.name || 'U')[0]}</span>
+            }
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%' }}>
+              <span style={{ fontSize: 20 }}>📷</span>
+            </div>
+          </div>
+        </label>
+      </div>
+
+      {/* Section Tabs - horizontal scroll */}
+      <div style={{ overflowX: 'auto', display: 'flex', gap: 8, padding: '8px 16px 12px', scrollbarWidth: 'none', background: '#fff', borderBottom: '1px solid #e8eaf6' }}>
+        {sections.map(s => (
+          <div key={s.id} onClick={() => setActiveSection(s.id)} style={{
+            display: 'flex', alignItems: 'center', gap: 5, padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer', transition: 'all .2s',
+            background: activeSection === s.id ? 'linear-gradient(135deg,#7C4DFF,#9c6fff)' : '#f0f4ff',
+            color: activeSection === s.id ? '#fff' : '#6b7280',
+          }}>
+            <span>{s.emoji}</span><span>{s.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Section Content */}
+      <div style={{ padding: '20px 16px 100px' }}>
+
+        {/* 1. BASIC INFO */}
+        {activeSection === 'basic' && (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 32, height: 32, background: 'linear-gradient(135deg,#7C4DFF,#9c6fff)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>👤</span>
+              Basic Information
+            </div>
+            <Field label="Full Name *" placeholder="Your full name" value={form.name} onChange={v => set('name', v)} />
+            <Field label="Username" placeholder="@yourusername" value={form.username} onChange={v => set('username', v)} />
+            <Field label="Bio / Intro" placeholder="Tell something about you..." value={form.bio} onChange={v => set('bio', v)} rows={3} />
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>Relationship Status</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {['Single', 'In a relationship', 'Married', 'It\'s complicated'].map(r => (
+                  <div key={r} onClick={() => set('relationship', r)} style={{
+                    padding: '8px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'all .2s',
+                    background: form.relationship === r ? 'linear-gradient(135deg,#ff6b9d,#ff9abe)' : '#f0f4ff',
+                    color: form.relationship === r ? '#fff' : '#6b7280',
+                    border: form.relationship === r ? '2px solid #ff6b9d' : '2px solid #e8eaf6',
+                  }}>{r}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. PERSONAL INFO */}
+        {activeSection === 'personal' && (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 32, height: 32, background: 'linear-gradient(135deg,#4fc3f7,#0288d1)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📋</span>
+              Personal Information
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>Date of Birth</label>
+              <input
+                className="inp"
+                type="text"
+                inputMode="numeric"
+                placeholder="DD/MM/YYYY (e.g. 15/03/2000)"
+                value={form.dob || ''}
+                onChange={e => set('dob', e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+            <Field label="Mobile Number" placeholder="+880 1xxx xxxxxx" value={form.phone} onChange={v => set('phone', v)} inputMode="tel" />
+            <Field label="Email Address" placeholder="your@email.com" value={form.email} onChange={v => set('email', v)} inputMode="email" />
+            <Field label="Current City" placeholder="Where do you live now?" value={form.city} onChange={v => set('city', v)} />
+            <Field label="Hometown" placeholder="Where are you from?" value={form.hometown} onChange={v => set('hometown', v)} />
+          </div>
+        )}
+
+        {/* 3. WORK & EDUCATION */}
+        {activeSection === 'work' && (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 32, height: 32, background: 'linear-gradient(135deg,#43a047,#1b5e20)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🎓</span>
+              Work & Education
+            </div>
+            <Field label="Job Title / Position" placeholder="e.g. Software Engineer" value={form.job} onChange={v => set('job', v)} />
+            <Field label="Company / Organization" placeholder="Where do you work?" value={form.company} onChange={v => set('company', v)} />
+            <div style={{ height: 1, background: '#e8eaf6', margin: '16px 0' }} />
+            <Field label="School" placeholder="Your school name" value={form.school} onChange={v => set('school', v)} />
+            <Field label="College / University" placeholder="Your college or university" value={form.university} onChange={v => set('university', v)} />
+            <Field label="Degree / Field of Study" placeholder="e.g. Computer Science" value={form.education} onChange={v => set('education', v)} />
+          </div>
+        )}
+
+        {/* 4. INTERESTS & HOBBIES */}
+        {activeSection === 'interests' && (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 32, height: 32, background: 'linear-gradient(135deg,#ff6b9d,#c2185b)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🎵</span>
+              Hobbies & Interests
+            </div>
+            <Field label="Hobbies" placeholder="e.g. Photography, Cooking, Hiking..." value={form.hobbies} onChange={v => set('hobbies', v)} rows={2} />
+            <Field label="🎵 Favorite Music" placeholder="e.g. BTS, Arijit Singh, Pop..." value={form.favMusic} onChange={v => set('favMusic', v)} />
+            <Field label="🎬 Favorite Movies" placeholder="e.g. Avengers, Titanic..." value={form.favMovie} onChange={v => set('favMovie', v)} />
+            <Field label="📚 Favorite Books" placeholder="e.g. Harry Potter, Quran..." value={form.favBook} onChange={v => set('favBook', v)} />
+
+            {/* Featured / Highlight section */}
+            <div style={{ background: 'linear-gradient(135deg,#ede7ff,#fce4ec)', borderRadius: 16, padding: 16, marginTop: 8 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#7C4DFF', marginBottom: 8 }}>⭐ Featured Highlights</div>
+              <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.6 }}>
+                You can highlight your important posts by pinning them. Go to any post → tap ··· → "Pin to Profile" to feature it here.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 5. CONTACT / SOCIAL LINKS */}
+        {activeSection === 'contact' && (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 32, height: 32, background: 'linear-gradient(135deg,#25D366,#128C7E)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>📞</span>
+              Contact & Social Links
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>💬 WhatsApp Number</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16 }}>💬</span>
+                <input className="inp" style={{ paddingLeft: 40 }} type="text" inputMode="tel" placeholder="+880 1xxx xxxxxx" value={form.whatsapp || ''} onChange={e => set('whatsapp', e.target.value)} autoComplete="off" />
+              </div>
+            </div>
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#6b7280', display: 'block', marginBottom: 6 }}>📸 Instagram Username</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', fontSize: 16 }}>📸</span>
+                <input className="inp" style={{ paddingLeft: 40 }} type="text" placeholder="@yourinstagram" value={form.instagram || ''} onChange={e => set('instagram', e.target.value)} autoComplete="off" />
+              </div>
+            </div>
+            <div style={{ background: '#f0f4ff', borderRadius: 14, padding: 14, marginTop: 4 }}>
+              <div style={{ fontSize: 12, color: '#9ca3af', lineHeight: 1.6 }}>
+                🔒 Your contact info is only visible to your friends based on your privacy settings.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 6. PRIVACY SETTINGS */}
+        {activeSection === 'privacy' && (
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1a1a2e', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 32, height: 32, background: 'linear-gradient(135deg,#7C4DFF,#5e35b1)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🔒</span>
+              Privacy Settings
+            </div>
+            <PrivacySelect label="Who can see my Posts?" value={form.privacyPosts} onChange={v => set('privacyPosts', v)} />
+            <PrivacySelect label="Who can see my Friends list?" value={form.privacyFriends} onChange={v => set('privacyFriends', v)} />
+            <div style={{ background: 'linear-gradient(135deg,#ede7ff,#fce4ec)', borderRadius: 16, padding: 16, marginTop: 8 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#7C4DFF', marginBottom: 8 }}>ℹ️ Privacy Tips</div>
+              <div style={{ fontSize: 12, color: '#6b7280', lineHeight: 1.8 }}>
+                🌍 <strong>Public</strong> — Everyone can see<br/>
+                👥 <strong>Friends</strong> — Only your friends can see<br/>
+                🔒 <strong>Only Me</strong> — Only you can see
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Save Button */}
+        <button onClick={save} disabled={saving} style={{
+          width: '100%', background: 'linear-gradient(135deg,#7C4DFF,#ff6b9d)', color: '#fff', border: 'none',
+          borderRadius: 16, padding: '15px', fontFamily: 'Poppins', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+          marginTop: 20, boxShadow: '0 6px 20px rgba(124,77,255,0.35)', opacity: saving ? 0.7 : 1
+        }}>
+          {saving ? '⏳ Saving...' : '💾 Save All Changes'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ===== PROFILE PAGE =====
+function ProfilePage({ me, showToast }) {
+  const [showEdit, setShowEdit] = useState(false);
+  const [posts, setPosts] = useState([]);
+  const [postTab, setPostTab] = useState('all');
+  const [loadingPosts, setLoadingPosts] = useState(true);
+
+  useEffect(() => {
+    if (!me?.uid) return;
+    setLoadingPosts(true);
+    // No orderBy to avoid composite index requirement — sort client-side
+    const unsub = db.collection('posts')
+      .where('authorId', '==', me.uid)
+      .onSnapshot(snap => {
+        const ps = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => {
+            const at = a.createdAt?.seconds || 0;
+            const bt = b.createdAt?.seconds || 0;
+            return bt - at;
+          });
+        setPosts(ps);
+        setLoadingPosts(false);
+      }, err => {
+        console.error('Posts error:', err);
+        setLoadingPosts(false);
+      });
+    return unsub;
+  }, [me?.uid]);
+
+  if (showEdit) return <EditProfilePage me={me} onBack={() => setShowEdit(false)} showToast={showToast} />;
+
+  const getThumb = (p) => (p.images?.length ? p.images[0] : p.imageURL || '');
+  const imgPosts = posts.filter(p => getThumb(p));
+
+  return (
+    <div>
+      <div className="topbar">
+        <span className="topbar-logo">Profile</span>
+        <div className="icon-btn" onClick={() => auth.signOut()}>
+          <Icon name="logout" size={18} color="#9ca3af" />
+        </div>
+      </div>
+      <div className="page-content">
+        {/* Cover Photo */}
+        <div style={{ width: '100%', height: 160, background: me?.coverURL ? 'none' : 'linear-gradient(135deg,#ede7ff,#fce4ec)', overflow: 'hidden', position: 'relative' }}>
+          {me?.coverURL
+            ? <img src={me.coverURL} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 48 }}>🌸</div>
+          }
+        </div>
+
+        {/* Avatar */}
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ margin: '-42px auto 0', width: 84, position: 'relative', display: 'inline-block' }}>
+            <div style={{ width: 84, height: 84, borderRadius: '50%', border: '4px solid #fff', overflow: 'hidden', background: 'linear-gradient(135deg,#7C4DFF,#ff6b9d)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(124,77,255,0.3)' }}>
+              {me?.photoURL ? <img src={me.photoURL} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <span style={{ fontSize: 32, color: '#fff', fontWeight: 700 }}>{(me?.name || 'U')[0]}</span>}
+            </div>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div style={{ textAlign: 'center', padding: '10px 20px 4px' }}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#1a1a2e' }}>{me?.name}</div>
+          {me?.username && <div style={{ fontSize: 13, color: '#7C4DFF', fontWeight: 600 }}>@{me.username}</div>}
+          {me?.bio && <div style={{ fontSize: 13, color: '#6b7280', marginTop: 5, lineHeight: 1.5 }}>{me.bio}</div>}
+        </div>
+
+        {/* Info chips */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', padding: '8px 16px' }}>
+          {me?.relationship && <span style={{ background: '#fce4ec', color: '#e91e63', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 600 }}>❤️ {me.relationship}</span>}
+          {me?.city && <span style={{ background: '#e8eaf6', color: '#5e35b1', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 600 }}>📍 {me.city}</span>}
+          {me?.company && <span style={{ background: '#e0f2f1', color: '#00796b', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 600 }}>💼 {me.company}</span>}
+          {me?.university && <span style={{ background: '#fff3e0', color: '#e65100', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 600 }}>🎓 {me.university}</span>}
+        </div>
+
+        {/* Stats */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 32, padding: '12px 0 8px' }}>
+          <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 800, color: '#1a1a2e' }}>{(me?.friends || []).length}</div><div style={{ fontSize: 11, color: '#9ca3af' }}>Friends</div></div>
+          <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 800, color: '#1a1a2e' }}>{loadingPosts ? '…' : posts.length}</div><div style={{ fontSize: 11, color: '#9ca3af' }}>Posts</div></div>
+          <div style={{ textAlign: 'center' }}><div style={{ fontSize: 18, fontWeight: 800, color: '#1a1a2e' }}>{loadingPosts ? '…' : posts.reduce((a, p) => a + (p.likes?.length || 0), 0)}</div><div style={{ fontSize: 11, color: '#9ca3af' }}>Likes</div></div>
+        </div>
+
+        {/* Buttons */}
+        <div style={{ display: 'flex', gap: 10, padding: '4px 16px 16px' }}>
+          <button className="btn-follow" onClick={() => setShowEdit(true)}>✏️ Edit Profile</button>
+        </div>
+
+        {/* Social Links */}
+        {(me?.whatsapp || me?.instagram) && (
+          <div style={{ display: 'flex', gap: 8, padding: '0 16px 14px', flexWrap: 'wrap' }}>
+            {me.whatsapp && <a href={`https://wa.me/${me.whatsapp.replace(/\D/g,'')}`} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#dcfce7', color: '#16a34a', borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>💬 WhatsApp</a>}
+            {me.instagram && <a href={`https://instagram.com/${me.instagram.replace('@','')}`} target="_blank" style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#fce7f3', color: '#be185d', borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 600, textDecoration: 'none' }}>📸 Instagram</a>}
+          </div>
+        )}
+
+        {/* Post Tabs */}
+        <div style={{ display: 'flex', borderTop: '1px solid #e8eaf6', borderBottom: '1px solid #e8eaf6', background: '#fff' }}>
+          {[['all', 'All'], ['photos', '📷 Photos']].map(([id, lbl]) => (
+            <div key={id} onClick={() => setPostTab(id)} style={{ flex: 1, textAlign: 'center', padding: '12px 0', fontSize: 13, fontWeight: 600, color: postTab === id ? '#7C4DFF' : '#9ca3af', borderBottom: postTab === id ? '2px solid #7C4DFF' : '2px solid transparent', cursor: 'pointer' }}>{lbl}</div>
+          ))}
+        </div>
+
+        {/* Posts Grid */}
+        {loadingPosts ? (
+          <div style={{ textAlign:'center', padding:'40px 20px', color:'#9ca3af', fontSize:13 }}>Loading posts...</div>
+        ) : (postTab === 'all' ? posts : imgPosts).length === 0 ? (
+          <div className="empty-state"><div className="emoji">📷</div><p>No posts yet</p></div>
+        ) : (
+          <div className="photo-grid">
+            {(postTab === 'all' ? posts : imgPosts).map(p => {
+              const thumb = getThumb(p);
+              const hasMulti = (p.images?.length || 0) > 1;
+              return (
+                <div key={p.id} className="photo-cell" style={{ position: 'relative' }}>
+                  {thumb
+                    ? <img src={thumb} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                    : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#ede7ff,#fce4ec)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, color:'#9ca3af', padding:8, textAlign:'center' }}>{p.text?.slice(0,30)}</div>
+                  }
+                  {hasMulti && (
+                    <div style={{ position:'absolute', top:5, right:5, background:'rgba(0,0,0,0.55)', borderRadius:6, padding:'2px 6px', color:'#fff', fontSize:11, fontWeight:700 }}>⧉ {p.images.length}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ===== VIEW PROFILE PAGE =====
+function ViewProfilePage({ me, user, onBack, onChat, showToast }) {
+  const [posts, setPosts] = useState([]);
+  const status = (() => {
+    if ((me?.friends || []).includes(user.uid)) return 'friends';
+    if ((me?.sentRequests || []).includes(user.uid)) return 'sent';
+    if ((me?.friendRequests || []).includes(user.uid)) return 'received';
+    return 'none';
+  })();
+
+  useEffect(() => {
+    const unsub = db.collection('posts')
+      .where('authorId', '==', user.uid)
+      .onSnapshot(snap => {
+        const ps = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+        setPosts(ps);
+      }, err => console.error(err));
+    return unsub;
+  }, [user.uid]);
+
+  const sendRequest = async () => {
+    const batch = db.batch();
+    batch.update(db.collection('users').doc(me.uid), { sentRequests: firebase.firestore.FieldValue.arrayUnion(user.uid) });
+    batch.update(db.collection('users').doc(user.uid), { friendRequests: firebase.firestore.FieldValue.arrayUnion(me.uid) });
+    await batch.commit();
+    showToast(`✅ Friend request sent to ${user.name}`);
+  };
+
+  return (
+    <div>
+      <div className="topbar">
+        <div style={{ cursor: 'pointer' }} onClick={onBack}><Icon name="back" size={22} color="#6b7280" /></div>
+        <span className="topbar-logo">{user.name}</span>
+        <div style={{ width: 38 }} />
+      </div>
+      <div className="page-content">
+        <div className="profile-cover-placeholder">🌸</div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ margin: '-42px auto 0', width: 84, display: 'inline-block' }}>
+            <div className="profile-main-avatar"><Avatar user={user} size={84} /></div>
+          </div>
+        </div>
+        <div className="profile-info">
+          <div className="profile-name">{user.name}</div>
+          <div className="profile-bio">{user.bio || 'No bio yet'}</div>
+        </div>
+        <div className="profile-stats">
+          <div className="profile-stat"><div className="profile-stat-val">{(user.friends || []).length}</div><div className="profile-stat-lbl">Friends</div></div>
+          <div className="profile-stat"><div className="profile-stat-val">{posts.length}</div><div className="profile-stat-lbl">Posts</div></div>
+        </div>
+        <div className="profile-btns">
+          {status === 'friends' ? (
+            <button className="btn-msg" onClick={() => onChat(user)}>💬 Message</button>
+          ) : status === 'sent' ? (
+            <button className="btn-msg" disabled>Request Sent ✓</button>
+          ) : status === 'received' ? (
+            <button className="btn-follow" onClick={() => {}}>Accept Request</button>
+          ) : (
+            <button className="btn-follow" onClick={sendRequest}>+ Add Friend</button>
+          )}
+          {status === 'friends' && <button className="btn-follow">✓ Friends</button>}
+        </div>
+        <div className="photo-grid">
+          {posts.map(p => {
+            const thumb = p.images?.length ? p.images[0] : p.imageURL || '';
+            const hasMulti = (p.images?.length || 0) > 1;
+            return (
+              <div key={p.id} className="photo-cell" style={{ position:'relative' }}>
+                {thumb
+                  ? <img src={thumb} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                  : <div style={{ width:'100%', height:'100%', background:'linear-gradient(135deg,#ede7ff,#fce4ec)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, color:'#9ca3af', padding:8, textAlign:'center' }}>{p.text?.slice(0,30)}</div>
+                }
+                {hasMulti && (
+                  <div style={{ position:'absolute', top:5, right:5, background:'rgba(0,0,0,0.55)', borderRadius:6, padding:'2px 6px', color:'#fff', fontSize:11, fontWeight:700 }}>⧉ {p.images.length}</div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
